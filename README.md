@@ -49,7 +49,6 @@ GeoXAI-Bore aims to address this research gap.
 
 - Random Forest
 - XGBoost
-- CatBoost
 - Scikit-learn
 
 ### Explainable AI
@@ -167,7 +166,7 @@ GeoXAI-Bore/
 
 - [x] Repository setup
 - [x] Project architecture
-- [ ] Literature review
+- [x] Literature review
 - [ ] Dataset collection
 - [ ] Data preprocessing
 - [ ] Feature engineering
