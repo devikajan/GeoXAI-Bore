@@ -1,7 +1,7 @@
 # GeoXAI-Bore
 
 ![Python](https://img.shields.io/badge/Python-3.11-blue)
-![Machine Learning](https://img.shields.io/badge/Machine%20Learning-Random%20Forest%20%7C%20XGBoost%20%7C%20)
+![Machine Learning](https://img.shields.io/badge/Machine%20Learning-Random%20Forest%20%7C%20XGBoost-green)
 ![Explainable AI](https://img.shields.io/badge/Explainable%20AI-SHAP-orange)
 ![Status](https://img.shields.io/badge/Status-Under%20Development-yellow)
 ![Research](https://img.shields.io/badge/Research-Andhra%20Pradesh-blueviolet)
