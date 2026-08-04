@@ -1,0 +1,39 @@
+{
+  "multiclass": {
+    "accuracy": 0.6375,
+    "precision_macro": 0.496,
+    "recall_macro": 0.4378,
+    "f1_macro": 0.4549,
+    "classes": [
+      "High",
+      "Low",
+      "Medium"
+    ],
+    "confusion_matrix": [
+      [
+        20,
+        4,
+        61
+      ],
+      [
+        1,
+        44,
+        117
+      ],
+      [
+        25,
+        82,
+        446
+      ]
+    ]
+  },
+  "binary": {
+    "accuracy": 0.7462,
+    "precision": 0.58,
+    "recall": 0.3833,
+    "f1": 0.4615,
+    "roc_auc": 0.7211
+  },
+  "n_train": 3200,
+  "n_test": 800
+}

@@ -1,0 +1,14 @@
+Feature,Importance
+Pump_Age_years,0.229039123718986
+Casing_Pipe_Age_years,0.10321897293488098
+Water_Yield_LPH,0.0756350980488329
+Annual_Rainfall_mm,0.07264662145800269
+Water_Table_Depth_ft,0.07262517602851852
+Voltage_Fluctuation_pct,0.06992401851361213
+Motor_Temperature_C,0.06985796571065263
+Vibration_Level_mms,0.06864703343791938
+Daily_Usage_hours,0.06715897554201403
+Borewell_Depth_ft,0.06656452556915637
+Region_Type,0.039529198249349945
+Soil_Type,0.03657987647610767
+Maintenance_Frequency_per_year,0.028573414311966677
