@@ -1,59 +1,195 @@
-# 💧 AquaGuard — Borewell Failure Prediction
+# GeoXAI-Bore
 
-A professional, multi-page Streamlit application for predicting borewell
-(bore-well pump) failure risk from hydrogeological, equipment, and
-maintenance data.
+![Python](https://img.shields.io/badge/Python-3.11-blue)
+![Machine Learning](https://img.shields.io/badge/Machine%20Learning-Random%20Forest%20%7C%20XGBoost-green)
+![Explainable AI](https://img.shields.io/badge/Explainable%20AI-SHAP-orange)
+![Status](https://img.shields.io/badge/Status-Under%20Development-yellow)
+![Research](https://img.shields.io/badge/Research-Andhra%20Pradesh-blueviolet)
 
-## Pages
+**GeoXAI-Bore** is an Explainable Ensemble Learning Framework for predicting individual borewell failure in the hard-rock aquifers of Andhra Pradesh using multi-source hydrogeological, climatic, and geospatial data.
 
-- **Overview** — fleet-wide KPIs and risk snapshot
-- **Predict Failure** — single-site form with risk gauge and driver explanation
-- **Analytics Dashboard** — filterable charts across the monitored fleet
-- **Model Insights** — feature importance, ROC curve, confusion matrix, metrics
-- **Batch Prediction** — upload a CSV and score many borewells at once
-- **About & Methodology** — data, model, and adaptation notes
+The project integrates **Random Forest**, **XGBoost**, and **CatBoost** with **SHAP-based Explainable AI (XAI)** and a **Generative AI explanation module** to provide transparent, interpretable, and data-driven borewell failure risk assessment through an interactive analytics dashboard.
 
-## Setup
+---
 
-```bash
-pip install -r requirements.txt
-python train_model.py     # generates data + trains the model (already done once)
-streamlit run app.py
+## Research Motivation
+
+Groundwater is the primary source of irrigation and drinking water in many regions of Andhra Pradesh. In hard-rock aquifers, borewells frequently fail due to groundwater depletion, erratic rainfall, over-extraction, and complex geological conditions.
+
+Existing research primarily focuses on:
+
+- Groundwater level prediction
+- Groundwater potential mapping
+- Regional groundwater assessment
+
+However, there is limited research on **predicting the failure risk of individual borewells** using multi-source hydrogeological data.
+
+GeoXAI-Bore aims to address this research gap.
+
+---
+
+## Objectives
+
+- Predict individual borewell failure risk.
+- Integrate multiple government hydrogeological datasets.
+- Compare multiple ensemble machine learning models.
+- Explain predictions using SHAP.
+- Generate natural-language explanations using Generative AI.
+- Develop an interactive dashboard for decision support.
+
+---
+
+## Technology Stack
+
+### Programming
+
+- Python
+
+### Machine Learning
+
+- Random Forest
+- XGBoost
+- Scikit-learn
+
+### Explainable AI
+
+- SHAP
+
+### Data Processing
+
+- Pandas
+- NumPy
+
+### GIS & Spatial Analytics
+
+- GeoPandas
+- QGIS
+- Rasterio
+
+### Backend
+
+- FastAPI
+
+### Frontend
+
+- Streamlit
+
+### Database
+
+- PostgreSQL
+
+### Visualization
+
+- Plotly
+- Folium
+- Matplotlib
+
+### Generative AI
+
+- OpenAI GPT / Gemini API
+
+---
+
+## Proposed Workflow
+
+```
+Government Data Sources
+        │
+        ▼
+Data Collection
+        │
+        ▼
+Preprocessing
+        │
+        ▼
+Feature Engineering
+        │
+        ▼
+Random Forest
+XGBoost
+        │
+        ▼
+Performance Evaluation
+        │
+        ▼
+SHAP Explainability
+        │
+        ▼
+Generative AI Explanation
+        │
+        ▼
+Interactive Dashboard
 ```
 
-Then open the local URL Streamlit prints (usually http://localhost:8501).
+---
 
-## Project structure
+## Data Sources
+
+The project uses publicly available government datasets, including:
+
+- Central Ground Water Board (CGWB)
+- India-WRIS
+- India Meteorological Department (IMD)
+- ISRO / NRSC
+- Andhra Pradesh groundwater and hydrogeological datasets (where available)
+
+---
+
+## Repository Structure
 
 ```
-app.py                          # Home page
-pages/
-  1_Predict_Failure.py
-  2_Analytics_Dashboard.py
-  3_Model_Insights.py
-  4_Batch_Prediction.py
-  5_About.py
-utils/
-  theme.py                      # shared CSS / design tokens
-  data_helpers.py                # model + data loading, prediction functions
-  model.pkl                      # trained model bundle
-  metrics.json                   # evaluation metrics
-  feature_importance.csv
-  roc_curve.csv
-data/
-  borewell_dataset.csv           # synthetic training dataset (4,000 rows)
-train_model.py                   # regenerate data + retrain model
-.streamlit/config.toml           # theme configuration
+GeoXAI-Bore/
+│
+├── backend/
+├── frontend/
+├── data/
+│   ├── raw/
+│   └── processed/
+├── notebooks/
+├── src/
+│   ├── preprocessing/
+│   ├── models/
+│   ├── explainability/
+│   └── genai/
+├── reports/
+├── paper/
+├── presentation/
+├── docs/
+├── README.md
+├── requirements.txt
+└── LICENSE
 ```
 
-## Using your own data
+---
 
-Replace `data/borewell_dataset.csv` with real records using the same column
-names (see the About page in-app for the full schema), then run
-`python train_model.py` again to retrain and refresh all metrics.
+## Current Status
 
-## Note
+- [x] Repository setup
+- [x] Project architecture
+- [x] Literature review
+- [ ] Dataset collection
+- [ ] Data preprocessing
+- [ ] Feature engineering
+- [ ] Model development
+- [ ] SHAP explainability
+- [ ] GenAI integration
+- [ ] Dashboard development
+- [ ] Research paper
+- [ ] Deployment
 
-The bundled dataset is **synthetically generated** for demonstration. Validate
-against real historical failure records before using this for operational
-decisions.
+---
+
+## Team
+
+- **Devika Janardhanan**
+- **Veerapaneni Joshitha**
+- **Kuriti Hema Latha**
+- **Shaik Mohammed Ayaz**
+
+---
+
+## License
+
+This project is developed for academic and research purposes.
+
+
