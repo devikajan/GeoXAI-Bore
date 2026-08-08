@@ -167,7 +167,7 @@ GeoXAI-Bore/
 - [x] Repository setup
 - [x] Project architecture
 - [x] Literature review
-- [ ] Dataset collection
+- [x] Dataset collection
 - [ ] Data preprocessing
 - [ ] Feature engineering
 - [ ] Model development
