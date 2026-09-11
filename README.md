@@ -168,13 +168,13 @@ GeoXAI-Bore/
 - [x] Project architecture
 - [x] Literature review
 - [x] Dataset collection
-- [ ] Data preprocessing
-- [ ] Feature engineering
-- [ ] Model development
-- [ ] SHAP explainability
+- [x] Data preprocessing
+- [x] Feature engineering
+- [x] Model development
+- [x] SHAP explainability
 - [ ] GenAI integration
 - [ ] Dashboard development
-- [ ] Research paper
+- [x] Research paper
 - [ ] Deployment
 
 ---
