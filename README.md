@@ -86,7 +86,7 @@ GeoXAI-Bore aims to address this research gap.
 
 ### Generative AI
 
-- OpenAI GPT / Gemini API
+- Gemini API
 
 ---
 
@@ -172,8 +172,8 @@ GeoXAI-Bore/
 - [x] Feature engineering
 - [x] Model development
 - [x] SHAP explainability
-- [ ] GenAI integration
-- [ ] Dashboard development
+- [x] GenAI integration
+- [x] Dashboard development
 - [x] Research paper
 - [ ] Deployment
 
