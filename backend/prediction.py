@@ -7,6 +7,7 @@ from backend.model import (
 )
 
 from backend.explain import explain_borewell
+from backend.genai_explanation import generate_explanation
 
 
 def predict_borewell(data):
@@ -46,10 +47,18 @@ def predict_borewell(data):
     # Get SHAP explanations
     explanations = explain_borewell(data)
 
+    # Generate GenAI explanation
+    genai_explanation = generate_explanation(
+        ensemble_probability,
+        risk_category,
+        explanations[:5]
+    )
+
     return {
         "random_forest_probability": round(rf_probability, 4),
         "xgboost_probability": round(xgb_probability, 4),
         "ensemble_probability": round(ensemble_probability, 4),
         "risk_category": risk_category,
-        "top_features": explanations[:5]
+        "top_features": explanations[:5],
+        "genai_explanation": genai_explanation
     }
