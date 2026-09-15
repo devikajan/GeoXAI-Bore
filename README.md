@@ -172,7 +172,7 @@ GeoXAI-Bore/
 - [x] Feature engineering
 - [x] Model development
 - [x] SHAP explainability
-- [x] GenAI integration
+- [ ] GenAI integration
 - [x] Dashboard development
 - [x] Research paper
 - [ ] Deployment
