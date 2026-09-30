@@ -91,7 +91,7 @@ class AssistantTests(unittest.TestCase):
 
         self.assertEqual(response.json(), {"reply": "Ready"})
         self.assertEqual(post.call_count, 2)
-        self.assertIn("gemini-2.5-flash-lite", post.call_args_list[1].args[0])
+        self.assertIn("gemini-3.5-flash-lite", post.call_args_list[1].args[0])
 
     @patch("backend.gemini_assistant.requests.post", side_effect=requests.Timeout)
     def test_timeout(self, post):

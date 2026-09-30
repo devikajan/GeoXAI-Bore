@@ -86,7 +86,7 @@ def chat_reply(messages, language="auto", simple_mode=True, assessment=None):
             f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent",
             headers={"x-goog-api-key": key}, json=payload, timeout=(5, 55),
         )
-        fallback_model = "gemini-2.5-flash-lite"
+        fallback_model = "gemini-3.5-flash-lite"
         if response.status_code == 503 and model != fallback_model:
             logger.info("Gemini model %s is busy; retrying with %s", model, fallback_model)
             response = requests.post(
