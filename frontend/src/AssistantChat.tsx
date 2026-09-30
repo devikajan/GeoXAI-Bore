@@ -8,6 +8,7 @@ type Recognition = {
   lang: string
   interimResults: boolean
   start: () => void
+  stop: () => void
   onresult: ((event: { results: { 0: { 0: { transcript: string } } } }) => void) | null
   onerror: (() => void) | null
   onend: (() => void) | null
@@ -59,11 +60,24 @@ export default function AssistantChat({ result }: { result: PredictionResult | n
   const [error, setError] = useState('')
   const bottom = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
+  const recognitionRef = useRef<Recognition | null>(null)
   const text = language === 'te' ? copy.te : copy.en
   const voiceLanguage = languageOptions.find((option) => option.code === language)?.voice ?? 'en-IN'
 
   useEffect(() => { bottom.current?.scrollIntoView({ block: 'nearest' }) }, [messages, busy, open])
   useEffect(() => { if (open) inputRef.current?.focus() }, [open])
+  useEffect(() => () => {
+    window.speechSynthesis.cancel()
+    recognitionRef.current?.stop()
+  }, [])
+
+  function closeAssistant() {
+    window.speechSynthesis.cancel()
+    recognitionRef.current?.stop()
+    recognitionRef.current = null
+    setListening(false)
+    setOpen(false)
+  }
 
   async function submit(event: FormEvent) {
     event.preventDefault()
@@ -95,11 +109,12 @@ export default function AssistantChat({ result }: { result: PredictionResult | n
     if (!RecognitionApi) { setError(text.voiceUnavailable); return }
     setError('')
     const recognition = new RecognitionApi()
+    recognitionRef.current = recognition
     recognition.lang = voiceLanguage
     recognition.interimResults = false
     recognition.onresult = (event) => setInput(event.results[0][0].transcript)
     recognition.onerror = () => setError(text.voiceUnavailable)
-    recognition.onend = () => setListening(false)
+    recognition.onend = () => { recognitionRef.current = null; setListening(false) }
     setListening(true)
     recognition.start()
   }
@@ -114,7 +129,7 @@ export default function AssistantChat({ result }: { result: PredictionResult | n
 
   return <div className="assistant-widget">
     {open && <section className="assistant-panel" aria-label={text.title}>
-      <div className="assistant-header"><img src={assistantIcon} alt="" /><div><strong>{text.title}</strong><small>{text.subtitle}</small></div><button type="button" onClick={() => setOpen(false)} aria-label={text.close}>×</button></div>
+      <div className="assistant-header"><img src={assistantIcon} alt="" /><div><strong>{text.title}</strong><small>{text.subtitle}</small></div><button type="button" onClick={closeAssistant} aria-label={text.close}>×</button></div>
       <div className="assistant-tools"><label htmlFor="assistant-language">Answer language</label><select id="assistant-language" value={language} onChange={(event) => setLanguage(event.target.value as AssistantLanguage)}>{languageOptions.map((option) => <option key={option.code} value={option.code}>{option.label}</option>)}</select></div>
       {result && <div className={`assistant-result ${result.risk_category.toLowerCase()}`}><span>{language === 'te' ? 'తాజా ఫలితం జతచేయబడింది' : 'Latest result attached'}</span><strong>{result.risk_category} · {(result.ensemble_probability * 100).toFixed(1)}%</strong></div>}
       <div className="assistant-messages" role="log" aria-live="polite" aria-busy={busy}>
@@ -126,8 +141,8 @@ export default function AssistantChat({ result }: { result: PredictionResult | n
       {listening && <p className="assistant-listening" role="status">● {text.listening}</p>}
       {error && <p className="assistant-error" role="alert">{error}</p>}
       <form className="assistant-form" onSubmit={submit}><button className="voice-button" type="button" onClick={startVoiceInput} disabled={busy || listening} aria-label={text.listening}>🎙️</button><label className="assistant-input"><span className="sr-only">{text.placeholder}</span><input ref={inputRef} value={input} onChange={(event) => setInput(event.target.value)} maxLength={4000} placeholder={text.placeholder} disabled={busy} /></label><button type="submit" disabled={busy || !input.trim()}>{text.send}</button></form>
-      <div className="assistant-footer"><span>{text.fieldNote}</span><button type="button" disabled={busy} onClick={() => { setMessages([]); setError(''); setInput('') }}>{text.clear}</button></div>
+      <div className="assistant-footer"><span>{text.fieldNote}</span><button type="button" disabled={busy} onClick={() => { window.speechSynthesis.cancel(); setMessages([]); setError(''); setInput('') }}>{text.clear}</button></div>
     </section>}
-    <button className="assistant-launcher" type="button" aria-expanded={open} onClick={() => setOpen(!open)}><img src={assistantIcon} alt="" />{open ? text.close : text.open}</button>
+    <button className="assistant-launcher" type="button" aria-expanded={open} onClick={() => open ? closeAssistant() : setOpen(true)}><img src={assistantIcon} alt="" />{open ? text.close : text.open}</button>
   </div>
 }
