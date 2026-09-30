@@ -42,7 +42,7 @@ class AssessmentContext(BaseModel):
 
 class ChatRequest(BaseModel):
     messages: list[ChatMessage] = Field(min_length=1, max_length=20)
-    language: Literal["auto", "en", "te"] = "auto"
+    language: Literal["auto", "en", "te", "hi", "ta", "kn", "ml", "mr", "bn", "gu", "pa", "ur", "or"] = "auto"
     simple_mode: bool = True
     assessment: AssessmentContext | None = None
 

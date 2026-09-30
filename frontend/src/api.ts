@@ -47,7 +47,7 @@ export const requiredInputFields: (keyof BorewellInput)[] = [
 const API_URL = import.meta.env.VITE_API_URL ?? 'http://127.0.0.1:8000'
 
 export type ChatMessage = { role: 'user' | 'assistant'; content: string }
-export type AssistantLanguage = 'en' | 'te'
+export type AssistantLanguage = 'auto' | 'en' | 'te' | 'hi' | 'ta' | 'kn' | 'ml' | 'mr' | 'bn' | 'gu' | 'pa' | 'ur' | 'or'
 export type AssistantAssessment = Pick<PredictionResult, 'risk_category' | 'ensemble_probability' | 'top_features'>
 
 export async function sendChat(messages: ChatMessage[], language: AssistantLanguage, assessment?: AssistantAssessment): Promise<string> {

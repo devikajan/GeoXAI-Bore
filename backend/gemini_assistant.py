@@ -25,6 +25,16 @@ LANGUAGE_INSTRUCTIONS = {
     "auto": "Reply in the same language as the user's latest message.",
     "en": "Reply in simple English.",
     "te": "Reply in natural, easy-to-read Telugu. Keep essential units and model names clear.",
+    "hi": "Reply in natural, easy-to-read Hindi.",
+    "ta": "Reply in natural, easy-to-read Tamil.",
+    "kn": "Reply in natural, easy-to-read Kannada.",
+    "ml": "Reply in natural, easy-to-read Malayalam.",
+    "mr": "Reply in natural, easy-to-read Marathi.",
+    "bn": "Reply in natural, easy-to-read Bengali.",
+    "gu": "Reply in natural, easy-to-read Gujarati.",
+    "pa": "Reply in natural, easy-to-read Punjabi.",
+    "ur": "Reply in natural, easy-to-read Urdu.",
+    "or": "Reply in natural, easy-to-read Odia.",
 }
 
 

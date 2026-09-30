@@ -103,6 +103,17 @@ class AssistantTests(unittest.TestCase):
         })
         self.assertEqual(response.status_code, 422)
 
+    def test_supported_languages_are_accepted(self):
+        supported = ["auto", "en", "te", "hi", "ta", "kn", "ml", "mr", "bn", "gu", "pa", "ur", "or"]
+        with patch("backend.main.chat_reply", return_value="OK"):
+            for language in supported:
+                with self.subTest(language=language):
+                    response = self.client.post("/chat", json={
+                        "messages": [{"role": "user", "content": "Hello"}],
+                        "language": language,
+                    })
+                    self.assertEqual(response.status_code, 200)
+
     def test_invalid_assessment_is_rejected(self):
         response = self.client.post("/chat", json={
             "messages": [{"role": "user", "content": "Explain my result"}],

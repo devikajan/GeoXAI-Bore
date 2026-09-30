@@ -14,6 +14,22 @@ type Recognition = {
 }
 type RecognitionConstructor = new () => Recognition
 
+const languageOptions: { code: AssistantLanguage; label: string; voice: string }[] = [
+  { code: 'auto', label: 'Auto · Same as message', voice: navigator.language || 'en-IN' },
+  { code: 'en', label: 'English', voice: 'en-IN' },
+  { code: 'te', label: 'తెలుగు · Telugu', voice: 'te-IN' },
+  { code: 'hi', label: 'हिन्दी · Hindi', voice: 'hi-IN' },
+  { code: 'ta', label: 'தமிழ் · Tamil', voice: 'ta-IN' },
+  { code: 'kn', label: 'ಕನ್ನಡ · Kannada', voice: 'kn-IN' },
+  { code: 'ml', label: 'മലയാളം · Malayalam', voice: 'ml-IN' },
+  { code: 'mr', label: 'मराठी · Marathi', voice: 'mr-IN' },
+  { code: 'bn', label: 'বাংলা · Bengali', voice: 'bn-IN' },
+  { code: 'gu', label: 'ગુજરાતી · Gujarati', voice: 'gu-IN' },
+  { code: 'pa', label: 'ਪੰਜਾਬੀ · Punjabi', voice: 'pa-IN' },
+  { code: 'ur', label: 'اردو · Urdu', voice: 'ur-IN' },
+  { code: 'or', label: 'ଓଡ଼ିଆ · Odia', voice: 'or-IN' },
+]
+
 const copy = {
   en: {
     title: 'GeoXAI help assistant', subtitle: 'Ask by typing or speaking', hello: 'How can I help with your borewell?',
@@ -35,7 +51,7 @@ const copy = {
 
 export default function AssistantChat({ result }: { result: PredictionResult | null }) {
   const [open, setOpen] = useState(false)
-  const [language, setLanguage] = useState<AssistantLanguage>('en')
+  const [language, setLanguage] = useState<AssistantLanguage>('auto')
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const [input, setInput] = useState('')
   const [busy, setBusy] = useState(false)
@@ -43,7 +59,8 @@ export default function AssistantChat({ result }: { result: PredictionResult | n
   const [error, setError] = useState('')
   const bottom = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
-  const text = copy[language]
+  const text = language === 'te' ? copy.te : copy.en
+  const voiceLanguage = languageOptions.find((option) => option.code === language)?.voice ?? 'en-IN'
 
   useEffect(() => { bottom.current?.scrollIntoView({ block: 'nearest' }) }, [messages, busy, open])
   useEffect(() => { if (open) inputRef.current?.focus() }, [open])
@@ -78,7 +95,7 @@ export default function AssistantChat({ result }: { result: PredictionResult | n
     if (!RecognitionApi) { setError(text.voiceUnavailable); return }
     setError('')
     const recognition = new RecognitionApi()
-    recognition.lang = language === 'te' ? 'te-IN' : 'en-IN'
+    recognition.lang = voiceLanguage
     recognition.interimResults = false
     recognition.onresult = (event) => setInput(event.results[0][0].transcript)
     recognition.onerror = () => setError(text.voiceUnavailable)
@@ -90,7 +107,7 @@ export default function AssistantChat({ result }: { result: PredictionResult | n
   function readAnswer(content: string) {
     window.speechSynthesis.cancel()
     const speech = new SpeechSynthesisUtterance(content)
-    speech.lang = language === 'te' ? 'te-IN' : 'en-IN'
+    speech.lang = voiceLanguage
     speech.rate = 0.9
     window.speechSynthesis.speak(speech)
   }
@@ -98,7 +115,7 @@ export default function AssistantChat({ result }: { result: PredictionResult | n
   return <div className="assistant-widget">
     {open && <section className="assistant-panel" aria-label={text.title}>
       <div className="assistant-header"><img src={assistantIcon} alt="" /><div><strong>{text.title}</strong><small>{text.subtitle}</small></div><button type="button" onClick={() => setOpen(false)} aria-label={text.close}>×</button></div>
-      <div className="assistant-tools" aria-label="Answer language"><button className={language === 'en' ? 'active' : ''} onClick={() => setLanguage('en')} type="button">English</button><button className={language === 'te' ? 'active' : ''} onClick={() => setLanguage('te')} type="button">తెలుగు</button></div>
+      <div className="assistant-tools"><label htmlFor="assistant-language">Answer language</label><select id="assistant-language" value={language} onChange={(event) => setLanguage(event.target.value as AssistantLanguage)}>{languageOptions.map((option) => <option key={option.code} value={option.code}>{option.label}</option>)}</select></div>
       {result && <div className={`assistant-result ${result.risk_category.toLowerCase()}`}><span>{language === 'te' ? 'తాజా ఫలితం జతచేయబడింది' : 'Latest result attached'}</span><strong>{result.risk_category} · {(result.ensemble_probability * 100).toFixed(1)}%</strong></div>}
       <div className="assistant-messages" role="log" aria-live="polite" aria-busy={busy}>
         {!messages.length && <div className="assistant-welcome"><h3>{text.hello}</h3><p>{text.intro}</p><p className="assistant-note">{text.privacy}</p>{text.prompts.map((question) => <button type="button" key={question} onClick={() => { setInput(question); inputRef.current?.focus() }}>{question}</button>)}</div>}

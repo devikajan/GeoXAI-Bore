@@ -9,8 +9,15 @@ with st.sidebar:
     st.page_link("pages/6_AI_Assistant.py", label="AI Assistant")
 
 hero("Powered by Gemini", "GeoXAI AI assistant", "Ask in English or Telugu about your borewell, pump, risk result, or CSV file.")
-language_label = st.radio("Answer language", ["English", "తెలుగు"], horizontal=True)
-language = "te" if language_label == "తెలుగు" else "en"
+languages = {
+    "Auto · Same as message": "auto", "English": "en", "తెలుగు · Telugu": "te",
+    "हिन्दी · Hindi": "hi", "தமிழ் · Tamil": "ta", "ಕನ್ನಡ · Kannada": "kn",
+    "മലയാളം · Malayalam": "ml", "मराठी · Marathi": "mr", "বাংলা · Bengali": "bn",
+    "ગુજરાતી · Gujarati": "gu", "ਪੰਜਾਬੀ · Punjabi": "pa", "اردو · Urdu": "ur",
+    "ଓଡ଼ିଆ · Odia": "or",
+}
+language_label = st.selectbox("Answer language", list(languages))
+language = languages[language_label]
 st.info("You can use simple words. For high-risk or electrical problems, contact a qualified field technician.")
 st.caption("Messages are sent to Gemini. Share a prediction here to discuss it; check AI guidance against field observations.")
 if "assistant_messages" not in st.session_state:

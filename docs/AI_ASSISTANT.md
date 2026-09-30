@@ -5,7 +5,9 @@ React has an **AI assistant** button in the lower-right corner. Streamlit has an
 borewell inputs, risk categories, SHAP, maintenance, and CSV uploads.
 
 The assistant is designed for a broad range of users and technical experience. It provides
-English and Telugu answers, short practical steps, and electrical safety guidance.
+automatic same-language replies and direct selection for English, Telugu, Hindi,
+Tamil, Kannada, Malayalam, Marathi, Bengali, Gujarati, Punjabi, Urdu, and Odia,
+along with short practical steps and electrical safety guidance.
 The React assistant also supports microphone input when the browser provides the
 Web Speech API and can read every answer aloud. Voice support depends on the
 browser, operating system, microphone permission, and installed speech voices.
