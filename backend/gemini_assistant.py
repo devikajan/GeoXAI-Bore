@@ -1,5 +1,6 @@
 """Server-side Gemini assistant shared by FastAPI and Streamlit."""
 import json
+import logging
 import os
 import re
 from pathlib import Path
@@ -36,6 +37,8 @@ LANGUAGE_INSTRUCTIONS = {
     "ur": "Reply in natural, easy-to-read Urdu.",
     "or": "Reply in natural, easy-to-read Odia.",
 }
+
+logger = logging.getLogger(__name__)
 
 
 class AssistantError(Exception):
@@ -92,6 +95,7 @@ def chat_reply(messages, language="auto", simple_mode=True, assessment=None):
     if response.status_code == 429:
         raise AssistantError("Gemini usage limit reached. Please try again later.", 429)
     if not response.ok:
+        logger.warning("Gemini request failed with HTTP %s: %.500s", response.status_code, response.text)
         raise AssistantError("Gemini request failed. Check GEMINI_MODEL and your API configuration.", 502)
     try:
         parts = response.json().get("candidates", [{}])[0].get("content", {}).get("parts", [])
