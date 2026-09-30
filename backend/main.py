@@ -1,5 +1,8 @@
+import os
+from pathlib import Path
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from dotenv import dotenv_values
 from pydantic import BaseModel, Field, field_validator
 from typing import Literal
 from backend.gemini_assistant import AssistantError, chat_reply
@@ -7,11 +10,26 @@ from backend.gemini_assistant import AssistantError, chat_reply
 from backend.schemas import BorewellInput
 
 
+ENV_PATH = Path(__file__).resolve().parents[1] / ".env"
+LOCAL_CORS_ORIGINS = (
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
+    "http://localhost:4173",
+    "http://127.0.0.1:4173",
+)
+
+
+def resolve_cors_origins():
+    file_settings = dotenv_values(ENV_PATH) if ENV_PATH.exists() else {}
+    configured = os.getenv("CORS_ORIGINS") or file_settings.get("CORS_ORIGINS") or ""
+    deployment_origins = [origin.strip().rstrip("/") for origin in str(configured).split(",") if origin.strip()]
+    return list(dict.fromkeys((*LOCAL_CORS_ORIGINS, *deployment_origins)))
+
+
 app = FastAPI()
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173", "http://127.0.0.1:5173",
-                   "http://localhost:4173", "http://127.0.0.1:4173"],
+    allow_origins=resolve_cors_origins(),
     allow_methods=["GET", "POST"], allow_headers=["Content-Type"],
 )
 
