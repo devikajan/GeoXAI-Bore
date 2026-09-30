@@ -1,5 +1,5 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-labelledby="title desc">
-  <title id="title">GeoXAI farmer assistant</title>
+  <title id="title">GeoXAI assistant</title>
   <desc id="desc">A water drop with a growing leaf and a helpful sparkle</desc>
   <path fill="#E4F2E5" d="M32 3C25 15 13 26 13 40a19 19 0 0 0 38 0C51 26 39 15 32 3Z"/>
   <path fill="none" stroke="#245441" stroke-width="4" stroke-linecap="round" d="M32 3C25 15 13 26 13 40a19 19 0 0 0 38 0C51 26 39 15 32 3Z"/>

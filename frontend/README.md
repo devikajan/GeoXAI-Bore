@@ -85,10 +85,10 @@ npm install
 npm run dev
 ```
 
-The frontend uses `http://localhost:8000` as the default API URL. To use another backend URL, create `frontend/.env`:
+The frontend uses `http://127.0.0.1:8000` as the default API URL. To use another backend URL, create `frontend/.env`:
 
 ```text
-VITE_API_URL=http://localhost:8000
+VITE_API_URL=http://127.0.0.1:8000
 ```
 
 Start the backend from the repository root:

@@ -8,7 +8,7 @@ with st.sidebar:
     st.page_link("app.py", label="Overview")
     st.page_link("pages/6_AI_Assistant.py", label="AI Assistant")
 
-hero("Powered by Gemini", "GeoXAI farmer assistant", "Ask in English or Telugu about your borewell, pump, risk result, or CSV file.")
+hero("Powered by Gemini", "GeoXAI AI assistant", "Ask in English or Telugu about your borewell, pump, risk result, or CSV file.")
 language_label = st.radio("Answer language", ["English", "తెలుగు"], horizontal=True)
 language = "te" if language_label == "తెలుగు" else "en"
 st.info("You can use simple words. For high-risk or electrical problems, contact a qualified field technician.")

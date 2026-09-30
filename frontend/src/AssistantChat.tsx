@@ -16,19 +16,19 @@ type RecognitionConstructor = new () => Recognition
 
 const copy = {
   en: {
-    title: 'Farmer help assistant', subtitle: 'Ask by typing or speaking', hello: 'How can I help with your borewell?',
+    title: 'GeoXAI help assistant', subtitle: 'Ask by typing or speaking', hello: 'How can I help with your borewell?',
     intro: 'Use simple words. I can explain risk, pump care, water levels, and this app.', privacy: 'Your message is sent to Gemini for an answer.',
     prompts: ['Explain my risk result', 'What pump warning signs should I check?', 'How do I fill the borewell form?'],
     placeholder: 'Type or use the microphone…', send: 'Send', you: 'You', assistant: 'Assistant', thinking: 'Preparing a simple answer…',
-    fieldNote: 'For electrical or high-risk problems, call a qualified technician.', clear: 'Clear', open: 'Farmer AI help', close: 'Close assistant',
+    fieldNote: 'For electrical or high-risk problems, call a qualified technician.', clear: 'Clear', open: 'AI help', close: 'Close assistant',
     voiceUnavailable: 'Voice input is not available in this browser. You can type your question.', listening: 'Listening… speak now', read: 'Read answer aloud',
   },
   te: {
-    title: 'రైతు సహాయకుడు', subtitle: 'టైప్ చేయండి లేదా మాట్లాడండి', hello: 'మీ బోరు గురించి ఎలా సహాయం చేయగలను?',
+    title: 'GeoXAI సహాయకుడు', subtitle: 'టైప్ చేయండి లేదా మాట్లాడండి', hello: 'మీ బోరు గురించి ఎలా సహాయం చేయగలను?',
     intro: 'సులభమైన మాటల్లో అడగండి. ప్రమాదం, పంపు సంరక్షణ, నీటి మట్టం మరియు ఈ యాప్ గురించి వివరిస్తాను.', privacy: 'సమాధానం కోసం మీ సందేశం Geminiకి పంపబడుతుంది.',
     prompts: ['నా ప్రమాద ఫలితాన్ని వివరించండి', 'పంపులో ఏ హెచ్చరికలను చూడాలి?', 'బోరు వివరాల ఫారం ఎలా నింపాలి?'],
     placeholder: 'టైప్ చేయండి లేదా మైక్ ఉపయోగించండి…', send: 'పంపండి', you: 'మీరు', assistant: 'సహాయకుడు', thinking: 'సులభమైన సమాధానం సిద్ధం చేస్తున్నాను…',
-    fieldNote: 'విద్యుత్ లేదా అధిక ప్రమాద సమస్యలకు నిపుణుడిని పిలవండి.', clear: 'తొలగించు', open: 'రైతు AI సహాయం', close: 'సహాయకుడిని మూసివేయండి',
+    fieldNote: 'విద్యుత్ లేదా అధిక ప్రమాద సమస్యలకు నిపుణుడిని పిలవండి.', clear: 'తొలగించు', open: 'AI సహాయం', close: 'సహాయకుడిని మూసివేయండి',
     voiceUnavailable: 'ఈ బ్రౌజర్‌లో వాయిస్ అందుబాటులో లేదు. మీ ప్రశ్నను టైప్ చేయండి.', listening: 'వింటున్నాను… ఇప్పుడు మాట్లాడండి', read: 'సమాధానం వినండి',
   },
 }

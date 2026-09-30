@@ -9,8 +9,8 @@ from dotenv import load_dotenv
 
 load_dotenv(Path(__file__).resolve().parents[1] / ".env")
 
-SYSTEM_PROMPT = """You are the GeoXAI-Bore field assistant for farmers and first-time
-digital users. Help with borewell inputs, groundwater, pump maintenance, risk results,
+SYSTEM_PROMPT = """You are the GeoXAI-Bore field assistant for people with different
+levels of technical experience. Help with borewell inputs, groundwater, pump maintenance, risk results,
 CSV uploads, and this app. Use short sentences, familiar words, and numbered actions.
 Explain technical terms the first time you use them. Be respectful and never talk down
 to the user. The app uses Random Forest and XGBoost models with SHAP explanations.

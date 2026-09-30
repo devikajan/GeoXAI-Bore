@@ -44,7 +44,7 @@ export const requiredInputFields: (keyof BorewellInput)[] = [
   'Casing_Pipe_Age_years',
 ]
 
-const API_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:8000'
+const API_URL = import.meta.env.VITE_API_URL ?? 'http://127.0.0.1:8000'
 
 export type ChatMessage = { role: 'user' | 'assistant'; content: string }
 export type AssistantLanguage = 'en' | 'te'
@@ -75,11 +75,16 @@ export async function sendChat(messages: ChatMessage[], language: AssistantLangu
 }
 
 export async function predictBorewell(input: BorewellInput): Promise<PredictionResult> {
-  const response = await fetch(`${API_URL}/predict`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(input),
-  })
+  let response: Response
+  try {
+    response = await fetch(`${API_URL}/predict`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(input),
+    })
+  } catch {
+    throw new Error(`Cannot reach the prediction API at ${API_URL}. Start the backend and try again.`)
+  }
 
   if (!response.ok) {
     const detail = await response.text()
