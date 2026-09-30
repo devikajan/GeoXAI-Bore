@@ -86,6 +86,13 @@ def chat_reply(messages, language="auto", simple_mode=True, assessment=None):
             f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent",
             headers={"x-goog-api-key": key}, json=payload, timeout=(5, 55),
         )
+        fallback_model = "gemini-2.5-flash-lite"
+        if response.status_code == 503 and model != fallback_model:
+            logger.info("Gemini model %s is busy; retrying with %s", model, fallback_model)
+            response = requests.post(
+                f"https://generativelanguage.googleapis.com/v1beta/models/{fallback_model}:generateContent",
+                headers={"x-goog-api-key": key}, json=payload, timeout=(5, 55),
+            )
     except requests.Timeout:
         raise AssistantError("Gemini took too long to respond. Please try again.", 504) from None
     except requests.RequestException:
