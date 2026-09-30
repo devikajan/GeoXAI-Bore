@@ -4,6 +4,7 @@ import { predictBorewell } from './api'
 import type { BorewellInput, FeatureExplanation, PredictionResult } from './api'
 import './App.css'
 import AssistantChat from './AssistantChat'
+import ResultGraphs from './ResultGraphs'
 
 const initialForm: BorewellInput = {
   Borewell_Depth_ft: 450,
@@ -130,7 +131,7 @@ function SelectField({ label, value, options, onChange }: { label: string; value
 
 function ResultView({ result, probability }: { result: PredictionResult; probability: number }) {
   const categoryClass = result.risk_category.toLowerCase()
-  return <div className="result-content"><div className="result-topline"><p className="eyebrow">Assessment result</p><span className={`risk-badge ${categoryClass}`}>{result.risk_category} risk</span></div><div className="score-wrap"><div className={`score-ring ${categoryClass}`} style={{ '--score': `${probability * 3.6}deg` } as React.CSSProperties}><div><strong>{probability.toFixed(1)}%</strong><span>6-month failure probability</span></div></div></div><div className="model-split"><div><span>Random Forest</span><strong>{(result.random_forest_probability * 100).toFixed(1)}%</strong></div><div><span>XGBoost</span><strong>{(result.xgboost_probability * 100).toFixed(1)}%</strong></div></div><div className="drivers"><div className="drivers-heading"><h3>What is driving this?</h3><span>SHAP influence</span></div>{result.top_features.map((feature) => <FeatureRow key={feature.feature} feature={feature} />)}</div></div>
+  return <div className="result-content"><div className="result-topline"><p className="eyebrow">Assessment result</p><span className={`risk-badge ${categoryClass}`}>{result.risk_category} risk</span></div><div className="score-wrap"><div className={`score-ring ${categoryClass}`} style={{ '--score': `${probability * 3.6}deg` } as React.CSSProperties}><div><strong>{probability.toFixed(1)}%</strong><span>6-month failure probability</span></div></div></div><div className="model-split"><div><span>Random Forest</span><strong>{(result.random_forest_probability * 100).toFixed(1)}%</strong></div><div><span>XGBoost</span><strong>{(result.xgboost_probability * 100).toFixed(1)}%</strong></div></div><ResultGraphs result={result} /><div className="drivers"><div className="drivers-heading"><h3>What is driving this?</h3><span>SHAP influence</span></div>{result.top_features.map((feature) => <FeatureRow key={feature.feature} feature={feature} />)}</div></div>
 }
 
 function FeatureRow({ feature }: { feature: FeatureExplanation }) {
