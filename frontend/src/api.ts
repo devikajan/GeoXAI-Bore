@@ -28,7 +28,9 @@ export type PredictionResult = {
   top_features: FeatureExplanation[]
 }
 
-const API_URL = import.meta.env.VITE_API_URL ?? 'http://127.0.0.1:8000'
+const API_URL = import.meta.env.PROD
+  ? '/api'
+  : (import.meta.env.VITE_API_URL ?? 'http://127.0.0.1:8000')
 
 export async function checkApiHealth(): Promise<boolean> {
   const controller = new AbortController()
