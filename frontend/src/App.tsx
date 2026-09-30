@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import type { FormEvent, PointerEvent as ReactPointerEvent } from 'react'
 import { checkApiHealth, predictBorewell } from './api'
 import type { BorewellInput, PredictionResult } from './api'
@@ -57,6 +57,7 @@ function App() {
   const [error, setError] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [apiStatus, setApiStatus] = useState<'checking' | 'ready' | 'offline'>('checking')
+  const activeSpotlight = useRef<HTMLElement | null>(null)
 
   useEffect(() => {
     let active = true
@@ -74,15 +75,22 @@ function App() {
     }
   }, [])
 
-  function updateAmbientBackground(event: ReactPointerEvent<HTMLElement>) {
-    const onBackground = event.target === event.currentTarget
-    event.currentTarget.style.setProperty('--ambient-x', `${event.clientX}px`)
-    event.currentTarget.style.setProperty('--ambient-y', `${event.clientY}px`)
-    event.currentTarget.style.setProperty('--ambient-opacity', onBackground ? '1' : '0')
+  function updateSurfaceSpotlight(event: ReactPointerEvent<HTMLElement>) {
+    const surface = (event.target as Element).closest<HTMLElement>('[data-spotlight]')
+    if (activeSpotlight.current && activeSpotlight.current !== surface) {
+      activeSpotlight.current.style.setProperty('--spot-active', '0')
+    }
+    activeSpotlight.current = surface
+    if (!surface) return
+    const bounds = surface.getBoundingClientRect()
+    surface.style.setProperty('--spot-x', `${event.clientX - bounds.left}px`)
+    surface.style.setProperty('--spot-y', `${event.clientY - bounds.top}px`)
+    surface.style.setProperty('--spot-active', '1')
   }
 
-  function hideAmbientBackground(event: ReactPointerEvent<HTMLElement>) {
-    event.currentTarget.style.setProperty('--ambient-opacity', '0')
+  function hideSurfaceSpotlight() {
+    activeSpotlight.current?.style.setProperty('--spot-active', '0')
+    activeSpotlight.current = null
   }
 
   const updateField = (field: keyof BorewellInput, value: string) => {
@@ -112,8 +120,7 @@ function App() {
   }
 
   return (
-    <main className="app-shell" onPointerMove={updateAmbientBackground} onPointerLeave={hideAmbientBackground}>
-      <div className="ambient-background" aria-hidden="true" />
+    <main className="app-shell" onPointerMove={updateSurfaceSpotlight} onPointerLeave={hideSurfaceSpotlight}>
       <header className="topbar">
         <a className="brand" href="#top" aria-label="GeoXAI-Bore home">
           <span className="brand-mark">GX</span>
@@ -123,15 +130,17 @@ function App() {
         <span className={`service-pill ${apiStatus}`} role="status"><i /> {apiStatus === 'ready' ? 'API ready' : apiStatus === 'offline' ? 'API offline' : 'Connecting'}</span>
       </header>
 
-      <section className="hero" id="top">
+      <section className="hero" id="top" data-spotlight="dark">
+        <span className="surface-glow" aria-hidden="true" />
         <div className="hero-copy"><p className="eyebrow">Explainable groundwater intelligence</p><h1>Know the risk before the water stops.</h1><p className="hero-text">Combine field conditions, pump telemetry, and maintenance history to surface an explainable six-month failure risk for one borewell.</p><div className="hero-actions"><a className="hero-primary" href="#assessment">Run an assessment <span>→</span></a><a className="hero-secondary" href="#method">Explore the method</a></div><div className="hero-note"><span>13</span> signals evaluated by a Random Forest + XGBoost ensemble</div></div>
         <div className="hero-diagram" aria-label="Borewell monitoring illustration"><div className="diagram-status"><span>Live model</span><strong>RF + XGB</strong></div><div className="rings"><span /><span /><span /></div><div className="well-line"><b>WELL</b><span>single-site risk profile</span></div><div className="water-line"><span>aquifer layer</span></div></div>
       </section>
 
-      <section className="proof-strip" aria-label="Model highlights"><div><strong>13</strong><span>Field and equipment signals</span></div><div><strong>02</strong><span>Models in the ensemble</span></div><div><strong>05</strong><span>Top SHAP factors explained</span></div><div><strong>06 mo</strong><span>Prediction horizon</span></div></section>
+      <section className="proof-strip" aria-label="Model highlights" data-spotlight="light"><span className="surface-glow" aria-hidden="true" /><div><strong>13</strong><span>Field and equipment signals</span></div><div><strong>02</strong><span>Models in the ensemble</span></div><div><strong>05</strong><span>Top SHAP factors explained</span></div><div><strong>06 mo</strong><span>Prediction horizon</span></div></section>
 
       <section className="workspace" id="assessment">
-        <form className="assessment-form" onSubmit={submitPrediction}>
+        <form className="assessment-form" onSubmit={submitPrediction} data-spotlight="light">
+          <span className="surface-glow" aria-hidden="true" />
           <div className="section-heading"><div><p className="eyebrow">Input profile</p><h2>Describe the borewell</h2></div><span className="required-note">All fields required</span></div>
           <fieldset><legend>Site &amp; hydrology</legend><div className="field-grid">
             <NumberField label="Borewell depth" suffix="ft" value={form.Borewell_Depth_ft} min={50} max={1500} step={10} onChange={(value) => updateField('Borewell_Depth_ft', value)} />
@@ -154,12 +163,13 @@ function App() {
           {error && <div className="error-banner" role="alert"><strong>Prediction unavailable.</strong> {error}<small>Start the API with <code>uvicorn backend.main:app --reload</code>.</small></div>}
         </form>
 
-        <aside className={`result-panel ${result ? 'has-result' : ''}`} aria-live="polite">
+        <aside className={`result-panel ${result ? 'has-result' : ''}`} aria-live="polite" data-spotlight="light">
+          <span className="surface-glow" aria-hidden="true" />
           {result ? <ResultView result={result} /> : <div className="empty-result"><span className="result-kicker">Live model output</span><div className="target-icon">◎</div><p className="eyebrow">Awaiting profile</p><h2>Your risk signal will appear here.</h2><p>Complete the profile and run an assessment to see the ensemble probability and the factors shaping it.</p><div className="empty-rule"><span /><small>Explainable prediction</small><span /></div></div>}
         </aside>
       </section>
 
-      <section className="method-strip" id="method"><p className="eyebrow">How it works</p><div><strong>01 / Predict</strong><span>Ensemble probability from two tree-based models.</span></div><div><strong>02 / Explain</strong><span>SHAP identifies the strongest risk drivers.</span></div><div><strong>03 / Act</strong><span>Use the signal to prioritize field inspection.</span></div></section>
+      <section className="method-strip" id="method"><p className="eyebrow">How it works</p><div data-spotlight="light"><span className="surface-glow" aria-hidden="true" /><strong>01 / Predict</strong><span>Ensemble probability from two tree-based models.</span></div><div data-spotlight="light"><span className="surface-glow" aria-hidden="true" /><strong>02 / Explain</strong><span>SHAP identifies the strongest risk drivers.</span></div><div data-spotlight="light"><span className="surface-glow" aria-hidden="true" /><strong>03 / Act</strong><span>Use the signal to prioritize field inspection.</span></div></section>
       <footer><span>GeoXAI-Bore / research demonstrator</span><span>For planning support, not safety-critical decisions</span></footer>
       <AssistantChat result={result} />
     </main>
