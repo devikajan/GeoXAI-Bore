@@ -22,6 +22,22 @@ const initialForm: BorewellInput = {
   Casing_Pipe_Age_years: 6,
 }
 
+const emptyForm: BorewellInput = {
+  Borewell_Depth_ft: 0,
+  Water_Table_Depth_ft: 0,
+  Pump_Age_years: 0,
+  Daily_Usage_hours: 0,
+  Soil_Type: '',
+  Region_Type: '',
+  Annual_Rainfall_mm: 0,
+  Maintenance_Frequency_per_year: 0,
+  Motor_Temperature_C: 0,
+  Vibration_Level_mms: 0,
+  Voltage_Fluctuation_pct: 0,
+  Water_Yield_LPH: 0,
+  Casing_Pipe_Age_years: 0,
+}
+
 const soilTypes = ['Sandy', 'Rocky', 'Clayey', 'Loamy', 'Laterite']
 const regionTypes = ['Coastal', 'Plateau', 'Plains', 'Hilly', 'Semi-Arid']
 
@@ -79,7 +95,7 @@ function App() {
   }
 
   const resetForm = () => {
-    setForm(initialForm)
+    setForm(emptyForm)
     setResult(null)
     setError('')
   }
@@ -143,7 +159,7 @@ function NumberField({ label, suffix, value, min, max, step, onChange }: NumberF
 }
 
 function SelectField({ label, value, options, onChange }: { label: string; value: string; options: string[]; onChange: (value: string) => void }) {
-  return <label className="field"><span>{label}</span><div className="input-wrap select-wrap"><select value={value} onChange={(event) => onChange(event.target.value)}>{options.map((option) => <option key={option}>{option}</option>)}</select><em>⌄</em></div></label>
+  return <label className="field"><span>{label}</span><div className="input-wrap select-wrap"><select required value={value} onChange={(event) => onChange(event.target.value)}><option value="" disabled>Select</option>{options.map((option) => <option key={option}>{option}</option>)}</select><em>⌄</em></div></label>
 }
 
 function ResultView({ result }: { result: PredictionResult }) {
