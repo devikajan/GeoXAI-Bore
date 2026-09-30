@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import type { FormEvent } from 'react'
+import type { FormEvent, PointerEvent as ReactPointerEvent } from 'react'
 import { checkApiHealth, predictBorewell } from './api'
 import type { BorewellInput, PredictionResult } from './api'
 import './App.css'
@@ -74,6 +74,29 @@ function App() {
     }
   }, [])
 
+  useEffect(() => {
+    const elements = Array.from(document.querySelectorAll<HTMLElement>('[data-reveal]'))
+    if (!('IntersectionObserver' in window)) {
+      elements.forEach((element) => element.classList.add('is-visible'))
+      return
+    }
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (!entry.isIntersecting) return
+        entry.target.classList.add('is-visible')
+        observer.unobserve(entry.target)
+      })
+    }, { threshold: 0.14 })
+    elements.forEach((element) => observer.observe(element))
+    return () => observer.disconnect()
+  }, [])
+
+  function updateHeroGlow(event: ReactPointerEvent<HTMLElement>) {
+    const bounds = event.currentTarget.getBoundingClientRect()
+    event.currentTarget.style.setProperty('--glow-x', `${((event.clientX - bounds.left) / bounds.width) * 100}%`)
+    event.currentTarget.style.setProperty('--glow-y', `${((event.clientY - bounds.top) / bounds.height) * 100}%`)
+  }
+
   const updateField = (field: keyof BorewellInput, value: string) => {
     setForm((current) => ({
       ...current,
@@ -111,14 +134,14 @@ function App() {
         <span className={`service-pill ${apiStatus}`} role="status"><i /> {apiStatus === 'ready' ? 'API ready' : apiStatus === 'offline' ? 'API offline' : 'Connecting'}</span>
       </header>
 
-      <section className="hero" id="top">
+      <section className="hero" id="top" onPointerMove={updateHeroGlow}>
         <div className="hero-copy"><p className="eyebrow">Explainable groundwater intelligence</p><h1>Know the risk before the water stops.</h1><p className="hero-text">Combine field conditions, pump telemetry, and maintenance history to surface an explainable six-month failure risk for one borewell.</p><div className="hero-actions"><a className="hero-primary" href="#assessment">Run an assessment <span>→</span></a><a className="hero-secondary" href="#method">Explore the method</a></div><div className="hero-note"><span>13</span> signals evaluated by a Random Forest + XGBoost ensemble</div></div>
         <div className="hero-diagram" aria-label="Borewell monitoring illustration"><div className="diagram-status"><span>Live model</span><strong>RF + XGB</strong></div><div className="rings"><span /><span /><span /></div><div className="well-line"><b>WELL</b><span>single-site risk profile</span></div><div className="water-line"><span>aquifer layer</span></div></div>
       </section>
 
-      <section className="proof-strip" aria-label="Model highlights"><div><strong>13</strong><span>Field and equipment signals</span></div><div><strong>02</strong><span>Models in the ensemble</span></div><div><strong>05</strong><span>Top SHAP factors explained</span></div><div><strong>06 mo</strong><span>Prediction horizon</span></div></section>
+      <section className="proof-strip" aria-label="Model highlights" data-reveal><div><strong>13</strong><span>Field and equipment signals</span></div><div><strong>02</strong><span>Models in the ensemble</span></div><div><strong>05</strong><span>Top SHAP factors explained</span></div><div><strong>06 mo</strong><span>Prediction horizon</span></div></section>
 
-      <section className="workspace" id="assessment">
+      <section className="workspace" id="assessment" data-reveal>
         <form className="assessment-form" onSubmit={submitPrediction}>
           <div className="section-heading"><div><p className="eyebrow">Input profile</p><h2>Describe the borewell</h2></div><span className="required-note">All fields required</span></div>
           <fieldset><legend>Site &amp; hydrology</legend><div className="field-grid">
@@ -147,7 +170,7 @@ function App() {
         </aside>
       </section>
 
-      <section className="method-strip" id="method"><p className="eyebrow">How it works</p><div><strong>01 / Predict</strong><span>Ensemble probability from two tree-based models.</span></div><div><strong>02 / Explain</strong><span>SHAP identifies the strongest risk drivers.</span></div><div><strong>03 / Act</strong><span>Use the signal to prioritize field inspection.</span></div></section>
+      <section className="method-strip" id="method"><p className="eyebrow">How it works</p><div data-reveal><strong>01 / Predict</strong><span>Ensemble probability from two tree-based models.</span></div><div data-reveal><strong>02 / Explain</strong><span>SHAP identifies the strongest risk drivers.</span></div><div data-reveal><strong>03 / Act</strong><span>Use the signal to prioritize field inspection.</span></div></section>
       <footer><span>GeoXAI-Bore / research demonstrator</span><span>For planning support, not safety-critical decisions</span></footer>
       <AssistantChat result={result} />
     </main>
