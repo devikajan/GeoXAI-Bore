@@ -5,6 +5,7 @@ import type { BorewellInput, PredictionResult } from './api'
 import './App.css'
 import AssistantChat from './AssistantChat'
 import ResultGraphs from './ResultGraphs'
+import ResultExplanation from './ResultExplanation'
 
 const initialForm: BorewellInput = {
   Borewell_Depth_ft: 450,
@@ -186,7 +187,7 @@ function SelectField({ label, value, options, onChange }: { label: string; value
 
 function ResultView({ result }: { result: PredictionResult }) {
   const categoryClass = result.risk_category.toLowerCase()
-  return <div className="result-content"><div className="result-topline"><p className="eyebrow">Assessment result</p><span className={`risk-badge ${categoryClass}`}>{result.risk_category} risk</span></div><ResultGraphs result={result} /></div>
+  return <div className="result-content"><div className="result-topline"><p className="eyebrow">Assessment result</p><span className={`risk-badge ${categoryClass}`}>{result.risk_category} risk</span></div><ResultGraphs result={result} /><ResultExplanation result={result} /></div>
 }
 
 export default App

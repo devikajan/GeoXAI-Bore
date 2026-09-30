@@ -8,6 +8,7 @@ The GeoXAI-Bore frontend is a React + TypeScript application for individual bore
 - Ensemble probability from Random Forest and XGBoost
 - Risk-score, model-comparison, and SHAP contribution graphs
 - SHAP-based feature drivers
+- Plain-language result explanation with 12 selectable languages
 - Risk category and recommended action
 - Movable multilingual Gemini assistant grounded in the latest prediction
 - Microphone input and read-aloud responses where the browser supports them
