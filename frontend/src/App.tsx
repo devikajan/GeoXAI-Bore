@@ -146,7 +146,7 @@ function App() {
           <fieldset><legend>Site &amp; hydrology</legend><div className="field-grid">
             <NumberField label="Borewell depth" suffix="ft" value={form.Borewell_Depth_ft} min={50} max={1500} step={10} onChange={(value) => updateField('Borewell_Depth_ft', value)} />
             <NumberField label="Water table depth" suffix="ft" value={form.Water_Table_Depth_ft} min={10} max={1000} step={10} onChange={(value) => updateField('Water_Table_Depth_ft', value)} />
-            <NumberField label="Water yield" suffix="LPH" value={form.Water_Yield_LPH} min={20} max={5000} step={50} onChange={(value) => updateField('Water_Yield_LPH', value)} />
+            <NumberField label="Water yield" suffix="LPH" value={form.Water_Yield_LPH} min={20} max={5000} step={10} onChange={(value) => updateField('Water_Yield_LPH', value)} />
             <SelectField label="Soil type" value={form.Soil_Type} options={soilTypes} onChange={(value) => updateField('Soil_Type', value)} />
             <SelectField label="Region type" value={form.Region_Type} options={regionTypes} onChange={(value) => updateField('Region_Type', value)} />
             <NumberField label="Annual rainfall" suffix="mm" value={form.Annual_Rainfall_mm} min={100} max={4000} step={50} onChange={(value) => updateField('Annual_Rainfall_mm', value)} />
