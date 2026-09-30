@@ -8,13 +8,23 @@ from dotenv import load_dotenv
 
 load_dotenv(Path(__file__).resolve().parents[1] / ".env")
 
-SYSTEM_PROMPT = """You are the GeoXAI-Bore assistant. Help users understand borewell
-inputs, groundwater, maintenance, risk categories, SHAP, CSV uploads, and this app.
-The React app uses a Random Forest and XGBoost ensemble with SHAP explanations.
+SYSTEM_PROMPT = """You are the GeoXAI-Bore field assistant for farmers and first-time
+digital users. Help with borewell inputs, groundwater, pump maintenance, risk results,
+CSV uploads, and this app. Use short sentences, familiar words, and numbered actions.
+Explain technical terms the first time you use them. Be respectful and never talk down
+to the user. The app uses Random Forest and XGBoost models with SHAP explanations.
 Do not invent measurements, predictions, dataset access, or actions you have taken.
-Only interpret a site-specific prediction when supplied by the user. SHAP explains
-model influence, not physical causation. Explain uncertainty and suggest field
-inspection when appropriate. Reply concisely in the user's language, using plain text."""
+Only interpret a site prediction when the user supplies it. SHAP shows model influence,
+not physical cause. Explain uncertainty and recommend a qualified field technician for
+high-risk findings. Never advise touching live wiring, an energized pump, or an open
+borewell. For immediate electrical danger, tell the user to switch off power from a safe
+location and contact a qualified electrician. Keep replies practical and concise."""
+
+LANGUAGE_INSTRUCTIONS = {
+    "auto": "Reply in the same language as the user's latest message.",
+    "en": "Reply in simple English.",
+    "te": "Reply in natural, easy-to-read Telugu. Keep essential units and model names clear.",
+}
 
 
 class AssistantError(Exception):
@@ -23,15 +33,23 @@ class AssistantError(Exception):
         self.status_code = status_code
 
 
-def chat_reply(messages):
+def chat_reply(messages, language="auto", simple_mode=True):
     key = os.getenv("GEMINI_API_KEY", "").strip()
     if not key or key in {"replace_with_your_server_side_key", "your_key"}:
         raise AssistantError("AI assistant is not configured. Set GEMINI_API_KEY in the root .env file and restart the server.")
     model = os.getenv("GEMINI_MODEL", "gemini-3.1-flash-lite").strip()
     if not re.fullmatch(r"[A-Za-z0-9._-]+", model):
         raise AssistantError("GEMINI_MODEL configuration is invalid.")
+    if language not in LANGUAGE_INSTRUCTIONS:
+        raise AssistantError("Assistant language is invalid.", 400)
+    audience_instruction = (
+        "Prefer one idea per sentence and no more than five action steps."
+        if simple_mode else
+        "You may include additional technical detail when it helps the user."
+    )
+    instruction = "\n".join((SYSTEM_PROMPT, LANGUAGE_INSTRUCTIONS[language], audience_instruction))
     payload = {
-        "systemInstruction": {"parts": [{"text": SYSTEM_PROMPT}]},
+        "systemInstruction": {"parts": [{"text": instruction}]},
         "contents": [{"role": "model" if item["role"] == "assistant" else "user",
                       "parts": [{"text": item["content"]}]} for item in messages],
         "generationConfig": {

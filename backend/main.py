@@ -30,6 +30,8 @@ class ChatMessage(BaseModel):
 
 class ChatRequest(BaseModel):
     messages: list[ChatMessage] = Field(min_length=1, max_length=20)
+    language: Literal["auto", "en", "te"] = "auto"
+    simple_mode: bool = True
 
     @field_validator("messages")
     @classmethod
@@ -43,7 +45,11 @@ class ChatRequest(BaseModel):
 @app.post("/chat")
 def chat(data: ChatRequest):
     try:
-        return {"reply": chat_reply([message.model_dump() for message in data.messages])}
+        return {"reply": chat_reply(
+            [message.model_dump() for message in data.messages],
+            language=data.language,
+            simple_mode=data.simple_mode,
+        )}
     except AssistantError as error:
         raise HTTPException(status_code=error.status_code, detail=str(error)) from None
 

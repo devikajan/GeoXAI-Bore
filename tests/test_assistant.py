@@ -30,6 +30,20 @@ class AssistantTests(unittest.TestCase):
         self.assertEqual(payload["headers"]["x-goog-api-key"], "test-key")
 
     @patch("backend.gemini_assistant.requests.post")
+    def test_telugu_and_simple_mode_reach_system_instruction(self, post):
+        post.return_value = Mock(ok=True, status_code=200)
+        post.return_value.json.return_value = {"candidates": [{"content": {"parts": [{"text": "సమాధానం"}]}}]}
+        response = self.client.post("/chat", json={
+            "messages": [{"role": "user", "content": "నా బోరు ప్రమాదం వివరించండి"}],
+            "language": "te",
+            "simple_mode": True,
+        })
+        self.assertEqual(response.status_code, 200)
+        instruction = post.call_args.kwargs["json"]["systemInstruction"]["parts"][0]["text"]
+        self.assertIn("Telugu", instruction)
+        self.assertIn("five action steps", instruction)
+
+    @patch("backend.gemini_assistant.requests.post")
     def test_missing_key_does_not_call_provider(self, post):
         with patch.dict(os.environ, {"GEMINI_API_KEY": ""}):
             self.assertEqual(self.request().status_code, 503)
@@ -59,6 +73,13 @@ class AssistantTests(unittest.TestCase):
                          [{"role": "user", "content": "x" * 4001}],
                          [{"role": "assistant", "content": "Hello"}]]:
             self.assertEqual(self.client.post("/chat", json={"messages": messages}).status_code, 422)
+
+    def test_invalid_language(self):
+        response = self.client.post("/chat", json={
+            "messages": [{"role": "user", "content": "Hello"}],
+            "language": "xx",
+        })
+        self.assertEqual(response.status_code, 422)
 
     def test_local_frontend_cors(self):
         response = self.client.options("/chat", headers={"Origin": "http://localhost:5173", "Access-Control-Request-Method": "POST", "Access-Control-Request-Headers": "content-type"})
