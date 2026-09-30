@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import type { FormEvent } from 'react'
 import { checkApiHealth, predictBorewell } from './api'
-import type { BorewellInput, FeatureExplanation, PredictionResult } from './api'
+import type { BorewellInput, PredictionResult } from './api'
 import './App.css'
 import AssistantChat from './AssistantChat'
 import ResultGraphs from './ResultGraphs'
@@ -84,8 +84,6 @@ function App() {
     setError('')
   }
 
-  const probability = result ? result.ensemble_probability * 100 : 0
-
   return (
     <main className="app-shell">
       <header className="topbar">
@@ -129,7 +127,7 @@ function App() {
         </form>
 
         <aside className={`result-panel ${result ? 'has-result' : ''}`} aria-live="polite">
-          {result ? <ResultView result={result} probability={probability} /> : <div className="empty-result"><span className="result-kicker">Live model output</span><div className="target-icon">◎</div><p className="eyebrow">Awaiting profile</p><h2>Your risk signal will appear here.</h2><p>Complete the profile and run an assessment to see the ensemble probability and the factors shaping it.</p><div className="empty-rule"><span /><small>Explainable prediction</small><span /></div></div>}
+          {result ? <ResultView result={result} /> : <div className="empty-result"><span className="result-kicker">Live model output</span><div className="target-icon">◎</div><p className="eyebrow">Awaiting profile</p><h2>Your risk signal will appear here.</h2><p>Complete the profile and run an assessment to see the ensemble probability and the factors shaping it.</p><div className="empty-rule"><span /><small>Explainable prediction</small><span /></div></div>}
         </aside>
       </section>
 
@@ -148,14 +146,9 @@ function SelectField({ label, value, options, onChange }: { label: string; value
   return <label className="field"><span>{label}</span><div className="input-wrap select-wrap"><select value={value} onChange={(event) => onChange(event.target.value)}>{options.map((option) => <option key={option}>{option}</option>)}</select><em>⌄</em></div></label>
 }
 
-function ResultView({ result, probability }: { result: PredictionResult; probability: number }) {
+function ResultView({ result }: { result: PredictionResult }) {
   const categoryClass = result.risk_category.toLowerCase()
-  return <div className="result-content"><div className="result-topline"><p className="eyebrow">Assessment result</p><span className={`risk-badge ${categoryClass}`}>{result.risk_category} risk</span></div><div className="score-wrap"><div className={`score-ring ${categoryClass}`} style={{ '--score': `${probability * 3.6}deg` } as React.CSSProperties}><div><strong>{probability.toFixed(1)}%</strong><span>6-month failure probability</span></div></div></div><div className="model-split"><div><span>Random Forest</span><strong>{(result.random_forest_probability * 100).toFixed(1)}%</strong></div><div><span>XGBoost</span><strong>{(result.xgboost_probability * 100).toFixed(1)}%</strong></div></div><ResultGraphs result={result} /><div className="drivers"><div className="drivers-heading"><h3>What is driving this?</h3><span>SHAP influence</span></div>{result.top_features.map((feature) => <FeatureRow key={feature.feature} feature={feature} />)}</div></div>
-}
-
-function FeatureRow({ feature }: { feature: FeatureExplanation }) {
-  const positive = feature.shap_value > 0
-  return <div className="feature-row"><span className={`feature-dot ${positive ? 'positive' : 'negative'}`}>{positive ? '+' : '-'}</span><div><strong>{feature.feature}</strong><small>{feature.impact}</small></div><b className={positive ? 'positive-text' : 'negative-text'}>{positive ? '+' : ''}{feature.shap_value.toFixed(3)}</b></div>
+  return <div className="result-content"><div className="result-topline"><p className="eyebrow">Assessment result</p><span className={`risk-badge ${categoryClass}`}>{result.risk_category} risk</span></div><ResultGraphs result={result} /></div>
 }
 
 export default App
