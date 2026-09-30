@@ -15,7 +15,7 @@ type Recognition = {
 }
 type RecognitionConstructor = new () => Recognition
 type WidgetPosition = { x: number; y: number }
-type DragState = { pointerId: number; startX: number; startY: number; left: number; top: number; width: number; height: number }
+type DragState = { pointerId: number; startX: number; startY: number; left: number; top: number; width: number; height: number; moved: boolean; source: 'header' | 'launcher' }
 
 const assistantPositionKey = 'geoxai-assistant-position'
 
@@ -69,6 +69,7 @@ export default function AssistantChat({ result }: { result: PredictionResult | n
   const widgetRef = useRef<HTMLDivElement>(null)
   const dragRef = useRef<DragState | null>(null)
   const positionRef = useRef<WidgetPosition | null>(position)
+  const suppressLauncherClickRef = useRef(false)
   const bottom = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
   const recognitionRef = useRef<Recognition | null>(null)
@@ -108,10 +109,11 @@ export default function AssistantChat({ result }: { result: PredictionResult | n
     setOpen(false)
   }
 
-  function startDragging(event: ReactPointerEvent<HTMLDivElement>) {
-    if (event.button !== 0 || (event.target as HTMLElement).closest('button')) return
+  function startDragging(event: ReactPointerEvent<HTMLElement>, source: 'header' | 'launcher') {
+    if (event.button !== 0 || (source === 'header' && (event.target as HTMLElement).closest('button'))) return
     const bounds = widgetRef.current?.getBoundingClientRect()
     if (!bounds) return
+    suppressLauncherClickRef.current = false
     dragRef.current = {
       pointerId: event.pointerId,
       startX: event.clientX,
@@ -120,23 +122,30 @@ export default function AssistantChat({ result }: { result: PredictionResult | n
       top: bounds.top,
       width: bounds.width,
       height: bounds.height,
+      moved: false,
+      source,
     }
     event.currentTarget.setPointerCapture(event.pointerId)
     setDragging(true)
   }
 
-  function moveAssistant(event: ReactPointerEvent<HTMLDivElement>) {
+  function moveAssistant(event: ReactPointerEvent<HTMLElement>) {
     const drag = dragRef.current
     if (!drag || drag.pointerId !== event.pointerId) return
+    const deltaX = event.clientX - drag.startX
+    const deltaY = event.clientY - drag.startY
+    if (!drag.moved && Math.hypot(deltaX, deltaY) < 4) return
+    drag.moved = true
+    if (drag.source === 'launcher') suppressLauncherClickRef.current = true
     const margin = 8
-    const left = clamp(drag.left + event.clientX - drag.startX, margin, window.innerWidth - drag.width - margin)
-    const top = clamp(drag.top + event.clientY - drag.startY, margin, window.innerHeight - drag.height - margin)
+    const left = clamp(drag.left + deltaX, margin, window.innerWidth - drag.width - margin)
+    const top = clamp(drag.top + deltaY, margin, window.innerHeight - drag.height - margin)
     const nextPosition = { x: left + drag.width, y: top + drag.height }
     positionRef.current = nextPosition
     setPosition(nextPosition)
   }
 
-  function stopDragging(event: ReactPointerEvent<HTMLDivElement>) {
+  function stopDragging(event: ReactPointerEvent<HTMLElement>) {
     if (dragRef.current?.pointerId !== event.pointerId) return
     dragRef.current = null
     setDragging(false)
@@ -149,6 +158,15 @@ export default function AssistantChat({ result }: { result: PredictionResult | n
     setDragging(false)
     setPosition(null)
     window.localStorage.removeItem(assistantPositionKey)
+  }
+
+  function toggleAssistant() {
+    if (suppressLauncherClickRef.current) {
+      suppressLauncherClickRef.current = false
+      return
+    }
+    if (open) closeAssistant()
+    else setOpen(true)
   }
 
   async function submit(event: FormEvent) {
@@ -203,7 +221,7 @@ export default function AssistantChat({ result }: { result: PredictionResult | n
 
   return <div className={`assistant-widget ${dragging ? 'is-dragging' : ''}`} ref={widgetRef} style={widgetStyle}>
     {open && <section className="assistant-panel" aria-label={text.title}>
-      <div className="assistant-header" onPointerDown={startDragging} onPointerMove={moveAssistant} onPointerUp={stopDragging} onPointerCancel={stopDragging}><img src={assistantIcon} alt="" /><div><strong>{text.title}</strong><small>{text.move}</small></div><button className="assistant-position-reset" type="button" onClick={resetPosition} aria-label={text.resetPosition} title={text.resetPosition}>↺</button><button type="button" onClick={closeAssistant} aria-label={text.close}>×</button></div>
+      <div className="assistant-header" onPointerDown={(event) => startDragging(event, 'header')} onPointerMove={moveAssistant} onPointerUp={stopDragging} onPointerCancel={stopDragging}><img src={assistantIcon} alt="" /><div><strong>{text.title}</strong><small>{text.move}</small></div><button className="assistant-position-reset" type="button" onClick={resetPosition} aria-label={text.resetPosition} title={text.resetPosition}>↺</button><button type="button" onClick={closeAssistant} aria-label={text.close}>×</button></div>
       <div className="assistant-tools"><label htmlFor="assistant-language">Answer language</label><select id="assistant-language" value={language} onChange={(event) => setLanguage(event.target.value as AssistantLanguage)}>{languageOptions.map((option) => <option key={option.code} value={option.code}>{option.label}</option>)}</select></div>
       {result && <div className={`assistant-result ${result.risk_category.toLowerCase()}`}><span>{language === 'te' ? 'తాజా ఫలితం జతచేయబడింది' : 'Latest result attached'}</span><strong>{result.risk_category} · {(result.ensemble_probability * 100).toFixed(1)}%</strong></div>}
       <div className="assistant-messages" role="log" aria-live="polite" aria-busy={busy}>
@@ -217,7 +235,7 @@ export default function AssistantChat({ result }: { result: PredictionResult | n
       <form className="assistant-form" onSubmit={submit}><button className="voice-button" type="button" onClick={startVoiceInput} disabled={busy || listening} aria-label={text.listening}>🎙️</button><label className="assistant-input"><span className="sr-only">{text.placeholder}</span><input ref={inputRef} value={input} onChange={(event) => setInput(event.target.value)} maxLength={4000} placeholder={text.placeholder} disabled={busy} /></label><button type="submit" disabled={busy || !input.trim()}>{text.send}</button></form>
       <div className="assistant-footer"><span>{text.fieldNote}</span><button type="button" disabled={busy} onClick={() => { window.speechSynthesis.cancel(); setMessages([]); setError(''); setInput('') }}>{text.clear}</button></div>
     </section>}
-    <button className="assistant-launcher" type="button" aria-expanded={open} onClick={() => open ? closeAssistant() : setOpen(true)}><img src={assistantIcon} alt="" />{open ? text.close : text.open}</button>
+    <button className="assistant-launcher" type="button" aria-expanded={open} aria-label={`${open ? text.close : text.open}. ${text.move}`} title={text.move} onPointerDown={(event) => startDragging(event, 'launcher')} onPointerMove={moveAssistant} onPointerUp={stopDragging} onPointerCancel={stopDragging} onClick={toggleAssistant}><img src={assistantIcon} alt="" />{open ? text.close : text.open}</button>
   </div>
 }
 
