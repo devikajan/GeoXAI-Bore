@@ -9,6 +9,7 @@ type ProbabilityBar = {
 export default function ResultGraphs({ result }: { result: PredictionResult }) {
   const score = result.ensemble_probability * 100
   const markerPosition = Math.min(100, Math.max(0, score))
+  const maximumImpact = Math.max(...result.top_features.map((feature) => Math.abs(feature.shap_value)), 0.001)
   const bars: ProbabilityBar[] = [
     { label: 'Random Forest', value: result.random_forest_probability * 100, className: 'rf' },
     { label: 'XGBoost', value: result.xgboost_probability * 100, className: 'xgb' },
@@ -39,6 +40,35 @@ export default function ResultGraphs({ result }: { result: PredictionResult }) {
           </div>
         ))}
       </div>
+
+      {result.top_features.length > 0 && (
+        <div className="impact-chart" aria-label="SHAP feature influence graph">
+          <div className="impact-legend"><span>Reduces risk</span><span>Increases risk</span></div>
+          {result.top_features.map((feature) => {
+            const positive = feature.shap_value >= 0
+            const width = `${(Math.abs(feature.shap_value) / maximumImpact) * 100}%`
+            return (
+              <div className="impact-row" key={feature.feature}>
+                <span title={feature.feature}>{formatFeatureName(feature.feature)}</span>
+                <div className="impact-axis">
+                  <div>{!positive && <i className="negative" style={{ width }} />}</div>
+                  <div>{positive && <i className="positive" style={{ width }} />}</div>
+                </div>
+                <strong className={positive ? 'positive-text' : 'negative-text'}>
+                  {positive ? '+' : ''}{feature.shap_value.toFixed(3)}
+                </strong>
+              </div>
+            )
+          })}
+        </div>
+      )}
     </section>
   )
+}
+
+function formatFeatureName(feature: string) {
+  return feature
+    .replace(/^(categorical|numerical)__/, '')
+    .replace(/_/g, ' ')
+    .replace(/\b(ft|lph|mm|mms|pct)\b/gi, (unit) => unit.toUpperCase())
 }
