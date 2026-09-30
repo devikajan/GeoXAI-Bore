@@ -28,22 +28,6 @@ export type PredictionResult = {
   top_features: FeatureExplanation[]
 }
 
-export const requiredInputFields: (keyof BorewellInput)[] = [
-  'Borewell_Depth_ft',
-  'Water_Table_Depth_ft',
-  'Pump_Age_years',
-  'Daily_Usage_hours',
-  'Soil_Type',
-  'Region_Type',
-  'Annual_Rainfall_mm',
-  'Maintenance_Frequency_per_year',
-  'Motor_Temperature_C',
-  'Vibration_Level_mms',
-  'Voltage_Fluctuation_pct',
-  'Water_Yield_LPH',
-  'Casing_Pipe_Age_years',
-]
-
 const API_URL = import.meta.env.VITE_API_URL ?? 'http://127.0.0.1:8000'
 
 export type ChatMessage = { role: 'user' | 'assistant'; content: string }
@@ -92,20 +76,6 @@ export async function predictBorewell(input: BorewellInput): Promise<PredictionR
   }
 
   return response.json() as Promise<PredictionResult>
-}
-
-export async function predictBatch(
-  rows: BorewellInput[],
-  onProgress?: (completed: number, total: number) => void,
-): Promise<PredictionResult[]> {
-  const predictions: PredictionResult[] = []
-
-  for (const [index, row] of rows.entries()) {
-    predictions.push(await predictBorewell(row))
-    onProgress?.(index + 1, rows.length)
-  }
-
-  return predictions
 }
 
 export type GenAIExplanation = {

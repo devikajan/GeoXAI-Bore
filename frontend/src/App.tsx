@@ -1,6 +1,6 @@
 import { useState } from 'react'
-import type { ChangeEvent, FormEvent } from 'react'
-import { predictBatch, predictBorewell, requiredInputFields } from './api'
+import type { FormEvent } from 'react'
+import { predictBorewell } from './api'
 import type { BorewellInput, FeatureExplanation, PredictionResult } from './api'
 import './App.css'
 import AssistantChat from './AssistantChat'
@@ -24,8 +24,6 @@ const initialForm: BorewellInput = {
 const soilTypes = ['Sandy', 'Rocky', 'Clayey', 'Loamy', 'Laterite']
 const regionTypes = ['Coastal', 'Plateau', 'Plains', 'Hilly', 'Semi-Arid']
 
-type BatchRow = { source: Record<string, string>; prediction: PredictionResult }
-
 type NumberFieldProps = {
   label: string
   suffix: string
@@ -41,10 +39,6 @@ function App() {
   const [result, setResult] = useState<PredictionResult | null>(null)
   const [error, setError] = useState('')
   const [isLoading, setIsLoading] = useState(false)
-  const [batchRows, setBatchRows] = useState<BatchRow[]>([])
-  const [batchFileName, setBatchFileName] = useState('')
-  const [batchError, setBatchError] = useState('')
-  const [isBatchLoading, setIsBatchLoading] = useState(false)
 
   const updateField = (field: keyof BorewellInput, value: string) => {
     setForm((current) => ({
@@ -72,30 +66,6 @@ function App() {
     setError('')
   }
 
-  const handleBatchUpload = async (event: ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0]
-    if (!file) return
-
-    setBatchError('')
-    setBatchRows([])
-    setBatchFileName(file.name)
-    setIsBatchLoading(true)
-    try {
-      const parsed = parseCsv(await file.text())
-      const missingFields = requiredInputFields.filter((field) => !parsed.headers.includes(field))
-      if (!parsed.records.length) throw new Error('The CSV does not contain any data rows.')
-      if (missingFields.length) throw new Error(`Missing required columns: ${missingFields.join(', ')}`)
-
-      const inputs = parsed.records.map((record) => toBorewellInput(record))
-      const predictions = await predictBatch(inputs)
-      setBatchRows(parsed.records.map((source, index) => ({ source, prediction: predictions[index] })))
-    } catch (uploadError) {
-      setBatchError(uploadError instanceof Error ? uploadError.message : 'Unable to process this CSV file.')
-    } finally {
-      setIsBatchLoading(false)
-    }
-  }
-
   const probability = result ? result.ensemble_probability * 100 : 0
 
   return (
@@ -105,7 +75,7 @@ function App() {
           <span className="brand-mark">GX</span>
           <span><strong>GeoXAI-Bore</strong><small>Groundwater failure intelligence</small></span>
         </a>
-        <nav aria-label="Primary navigation"><a className="active" href="#assessment">Assessment</a><a href="#batch">Batch upload</a></nav>
+        <nav aria-label="Primary navigation"><a className="active" href="#assessment">Assessment</a><a href="#method">Method</a></nav>
         <span className="service-pill"><i /> API ready</span>
       </header>
 
@@ -143,8 +113,6 @@ function App() {
         </aside>
       </section>
 
-      <section className="batch-section" id="batch"><div className="section-heading"><div><p className="eyebrow">Batch assessment / 02</p><h2>Score a dataset</h2></div><span className="required-note">CSV upload</span></div><p className="batch-intro">Upload a CSV containing the same 13 model features. Extra columns are preserved in memory for this session.</p><label className="upload-zone"><input type="file" accept=".csv,text/csv" onChange={handleBatchUpload} disabled={isBatchLoading} /><span className="upload-icon">↑</span><strong>{isBatchLoading ? 'Scoring dataset...' : 'Choose a CSV dataset'}</strong><small>{batchFileName || 'Required columns are listed in the README'}</small></label>{batchError && <div className="error-banner" role="alert"><strong>Dataset not accepted.</strong> {batchError}</div>}{batchRows.length > 0 && <BatchSummary rows={batchRows} />}</section>
-
       <section className="method-strip" id="method"><p className="eyebrow">How it works</p><div><strong>01 / Predict</strong><span>Ensemble probability from two tree-based models.</span></div><div><strong>02 / Explain</strong><span>SHAP identifies the strongest risk drivers.</span></div><div><strong>03 / Act</strong><span>Use the signal to prioritize field inspection.</span></div></section>
       <footer><span>GeoXAI-Bore / research demonstrator</span><span>For planning support, not safety-critical decisions</span></footer>
       <AssistantChat result={result} />
@@ -168,35 +136,6 @@ function ResultView({ result, probability }: { result: PredictionResult; probabi
 function FeatureRow({ feature }: { feature: FeatureExplanation }) {
   const positive = feature.shap_value > 0
   return <div className="feature-row"><span className={`feature-dot ${positive ? 'positive' : 'negative'}`}>{positive ? '+' : '-'}</span><div><strong>{feature.feature}</strong><small>{feature.impact}</small></div><b className={positive ? 'positive-text' : 'negative-text'}>{positive ? '+' : ''}{feature.shap_value.toFixed(3)}</b></div>
-}
-
-function BatchSummary({ rows }: { rows: BatchRow[] }) {
-  const high = rows.filter(({ prediction }) => prediction.risk_category === 'High').length
-  const medium = rows.filter(({ prediction }) => prediction.risk_category === 'Medium').length
-  const low = rows.length - high - medium
-  return <div className="batch-results"><div className="batch-metrics"><div><strong>{rows.length}</strong><small>rows scored</small></div><div><strong className="high-text">{high}</strong><small>high risk</small></div><div><strong className="medium-text">{medium}</strong><small>medium risk</small></div><div><strong className="low-text">{low}</strong><small>low risk</small></div></div><div className="batch-table-wrap"><table><thead><tr><th>Row</th><th>Risk</th><th>Probability</th></tr></thead><tbody>{rows.slice(0, 20).map((row, index) => <tr key={`${index}-${row.prediction.risk_category}`}><td>{index + 1}</td><td><span className={`table-risk ${row.prediction.risk_category.toLowerCase()}`}>{row.prediction.risk_category}</span></td><td>{(row.prediction.ensemble_probability * 100).toFixed(1)}%</td></tr>)}</tbody></table></div><small className="table-note">Showing up to the first 20 scored rows.</small></div>
-}
-
-function parseCsv(text: string): { headers: string[]; records: Record<string, string>[] } {
-  const rows: string[][] = []
-  let row: string[] = []
-  let cell = ''
-  let quoted = false
-  for (let index = 0; index < text.length; index += 1) {
-    const character = text[index]
-    if (character === '"' && text[index + 1] === '"' && quoted) { cell += '"'; index += 1 }
-    else if (character === '"') quoted = !quoted
-    else if (character === ',' && !quoted) { row.push(cell.trim()); cell = '' }
-    else if ((character === '\n' || character === '\r') && !quoted) { if (character === '\r' && text[index + 1] === '\n') index += 1; row.push(cell.trim()); if (row.some(Boolean)) rows.push(row); row = []; cell = '' }
-    else cell += character
-  }
-  if (cell || row.length) { row.push(cell.trim()); rows.push(row) }
-  const headers = (rows.shift() ?? []).map((header) => header.replace(/^\uFEFF/, ''))
-  return { headers, records: rows.map((values) => Object.fromEntries(headers.map((header, index) => [header, values[index] ?? '']))) }
-}
-
-function toBorewellInput(record: Record<string, string>): BorewellInput {
-  return Object.fromEntries(requiredInputFields.map((field) => [field, field === 'Soil_Type' || field === 'Region_Type' ? record[field] : Number(record[field])])) as BorewellInput
 }
 
 export default App
