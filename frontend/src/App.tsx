@@ -62,17 +62,34 @@ function App() {
 
   useEffect(() => {
     let active = true
-    async function updateApiStatus() {
+    let failures = 0
+    let generation = 0
+    let timer: number | undefined
+    async function updateApiStatus(currentGeneration: number) {
       const available = await checkApiHealth()
-      if (active) setApiStatus(available ? 'ready' : 'offline')
+      if (!active || currentGeneration !== generation) return
+      if (available) {
+        failures = 0
+        setApiStatus('ready')
+      } else {
+        failures += 1
+        setApiStatus(failures >= 2 ? 'offline' : 'checking')
+      }
+      timer = window.setTimeout(() => updateApiStatus(currentGeneration), available ? 60000 : 5000)
     }
-    void updateApiStatus()
-    const timer = window.setInterval(updateApiStatus, 60000)
-    window.addEventListener('focus', updateApiStatus)
+    void updateApiStatus(generation)
+    const checkOnFocus = () => {
+      generation += 1
+      failures = 0
+      setApiStatus('checking')
+      window.clearTimeout(timer)
+      void updateApiStatus(generation)
+    }
+    window.addEventListener('focus', checkOnFocus)
     return () => {
       active = false
-      window.clearInterval(timer)
-      window.removeEventListener('focus', updateApiStatus)
+      window.clearTimeout(timer)
+      window.removeEventListener('focus', checkOnFocus)
     }
   }, [])
 
