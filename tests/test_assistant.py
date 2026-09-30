@@ -80,6 +80,19 @@ class AssistantTests(unittest.TestCase):
                 self.assertEqual(response.status_code, expected)
                 self.assertNotIn("test-key", response.text)
 
+    @patch("backend.gemini_assistant.requests.post")
+    def test_busy_model_uses_stable_fallback(self, post):
+        busy = Mock(ok=False, status_code=503, text="temporarily unavailable")
+        success = Mock(ok=True, status_code=200)
+        success.json.return_value = {"candidates": [{"content": {"parts": [{"text": "Ready"}]}}]}
+        post.side_effect = [busy, success]
+
+        response = self.request()
+
+        self.assertEqual(response.json(), {"reply": "Ready"})
+        self.assertEqual(post.call_count, 2)
+        self.assertIn("gemini-2.5-flash-lite", post.call_args_list[1].args[0])
+
     @patch("backend.gemini_assistant.requests.post", side_effect=requests.Timeout)
     def test_timeout(self, post):
         self.assertEqual(self.request().status_code, 504)
