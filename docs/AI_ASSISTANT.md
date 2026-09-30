@@ -4,6 +4,12 @@ React has an **AI assistant** button in the lower-right corner. Streamlit has an
 **AI Assistant** page in the sidebar. Both support conversational help with
 borewell inputs, risk categories, SHAP, maintenance, and CSV uploads.
 
+The assistant is designed for farmers and first-time digital users. It provides
+English and Telugu answers, short practical steps, and electrical safety guidance.
+The React assistant also supports microphone input when the browser provides the
+Web Speech API and can read every answer aloud. Voice support depends on the
+browser, operating system, microphone permission, and installed speech voices.
+
 Copy `.env.example` to `.env` in the repository root and fill in:
 
 ```text

@@ -47,14 +47,19 @@ export const requiredInputFields: (keyof BorewellInput)[] = [
 const API_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:8000'
 
 export type ChatMessage = { role: 'user' | 'assistant'; content: string }
+export type AssistantLanguage = 'en' | 'te'
 
-export async function sendChat(messages: ChatMessage[]): Promise<string> {
+export async function sendChat(messages: ChatMessage[], language: AssistantLanguage): Promise<string> {
   const controller = new AbortController()
   const timeout = window.setTimeout(() => controller.abort(), 65000)
   try {
     const response = await fetch(`${API_URL}/chat`, {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ messages: messages.slice(-19).map((message) => ({ ...message, content: message.content.slice(0, 4000) })) }),
+      body: JSON.stringify({
+        messages: messages.slice(-19).map((message) => ({ ...message, content: message.content.slice(0, 4000) })),
+        language,
+        simple_mode: true,
+      }),
       signal: controller.signal,
     })
     const data = await response.json()
