@@ -9,21 +9,26 @@ The GeoXAI-Bore frontend is a React + TypeScript application for individual bore
 - Risk-score, model-comparison, and SHAP contribution graphs
 - SHAP-based feature drivers
 - Risk category and recommended action
-- On-demand GenAI field brief grounded in each prediction
+- Movable multilingual Gemini assistant grounded in the latest prediction
+- Microphone input and read-aloud responses where the browser supports them
 - Responsive desktop and mobile layout
 
-## GenAI Field Brief
+## AI Assistant
 
-After running a single-borewell assessment, select **Generate field brief** to ask the backend's configured Gemini model for a concise interpretation. The brief contains an assessment, evidence from the supplied SHAP drivers and measurements, and a practical next step.
+Open **AI help** to ask questions about the model inputs, risk score, SHAP drivers,
+or practical next steps. When an assessment is available, its result is supplied
+to the assistant automatically.
 
 The API key is used only by the backend. Never put it in `frontend/.env`, browser code, or a CSV file. Copy the root `.env.example` to `.env` and set:
 
 ```text
 GEMINI_API_KEY=your_server_side_key
-GEMINI_MODEL=gemini-2.0-flash
+GEMINI_MODEL=gemini-3.1-flash-lite
 ```
 
-The GenAI endpoint is `POST /genai/explanation`. If the key is missing or the provider is unavailable, the normal ML prediction still works and the frontend displays the configuration error. The generated text is advisory and grounded only in the supplied prediction; it is not a replacement for model validation or field inspection.
+The assistant endpoint is `POST /chat`. If the key is missing or the provider is
+unavailable, ML prediction still works and the assistant displays the server
+error without exposing the key.
 
 ## Development
 
@@ -57,3 +62,5 @@ npm run build     # Type-check and create a production build
 npm run lint      # Run Oxlint
 npm run preview   # Preview the production build
 ```
+
+See the repository [deployment guide](../docs/DEPLOYMENT.md) for production setup.

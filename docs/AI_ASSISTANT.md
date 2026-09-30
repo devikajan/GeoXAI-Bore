@@ -1,16 +1,17 @@
 # Gemini assistant
 
-React has an **AI assistant** button in the lower-right corner. Streamlit has an
-**AI Assistant** page in the sidebar. Both support conversational help with
-borewell inputs, risk categories, SHAP, maintenance, and CSV uploads.
+The React interface has a movable **AI help** button. It supports conversational
+help with borewell inputs, risk categories, SHAP explanations, maintenance, and
+the latest assessment result.
 
 The assistant is designed for a broad range of users and technical experience. It provides
 automatic same-language replies and direct selection for English, Telugu, Hindi,
 Tamil, Kannada, Malayalam, Marathi, Bengali, Gujarati, Punjabi, Urdu, and Odia,
 along with short practical steps and electrical safety guidance.
-The React assistant also supports microphone input when the browser provides the
+The assistant also supports microphone input when the browser provides the
 Web Speech API and can read every answer aloud. Voice support depends on the
 browser, operating system, microphone permission, and installed speech voices.
+Closing the assistant stops any active speech playback.
 
 Copy `.env.example` to `.env` in the repository root and fill in:
 
@@ -39,17 +40,13 @@ npm run dev
 ```
 
 Open http://localhost:5173. Chat requests go to `POST /chat` on port 8000.
-The backend allows local frontend origins on ports 5173 and 4173. If you change
-the frontend port, update the allowed origins in `backend/main.py`.
+The backend allows local frontend origins on ports 5173 and 4173. Hosted frontend
+origins can be supplied through the `CORS_ORIGINS` environment variable.
 
-For Streamlit, install the project `requirements.txt` and run `streamlit run app.py`
-from the repository root. Its assistant calls Gemini directly from Python;
-FastAPI is not required for the Streamlit assistant.
-
-Conversation history is kept in the current browser/Streamlit session and sent
-to Gemini with each question (at most the latest nine exchanges and question).
-Use **Clear chat** to reset it. Results and datasets are not attached automatically;
-share a result in your message if you want the assistant to discuss it.
+Conversation history is kept in the current browser session and sent to Gemini
+with each question. Use **Clear chat** to reset it. The latest assessment result
+is included automatically so the assistant can explain its score and strongest
+risk drivers.
 Provider failures show an error without exposing the API key. Failed React
 messages stay in the input for retry. ML predictions remain independent of
 Gemini and need the remaining project dependencies.
@@ -60,3 +57,5 @@ Backend tests use mocked Gemini responses, with no real key or API usage:
 python -m pip install httpx
 python -m unittest discover -s tests -v
 ```
+
+For production hosting, follow the [deployment guide](DEPLOYMENT.md).
