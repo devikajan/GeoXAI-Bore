@@ -30,6 +30,19 @@ export type PredictionResult = {
 
 const API_URL = import.meta.env.VITE_API_URL ?? 'http://127.0.0.1:8000'
 
+export async function checkApiHealth(): Promise<boolean> {
+  const controller = new AbortController()
+  const timeout = window.setTimeout(() => controller.abort(), 4000)
+  try {
+    const response = await fetch(`${API_URL}/health`, { signal: controller.signal })
+    return response.ok
+  } catch {
+    return false
+  } finally {
+    window.clearTimeout(timeout)
+  }
+}
+
 export type ChatMessage = { role: 'user' | 'assistant'; content: string }
 export type AssistantLanguage = 'auto' | 'en' | 'te' | 'hi' | 'ta' | 'kn' | 'ml' | 'mr' | 'bn' | 'gu' | 'pa' | 'ur' | 'or'
 export type AssistantAssessment = Pick<PredictionResult, 'risk_category' | 'ensemble_probability' | 'top_features'>

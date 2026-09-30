@@ -1,6 +1,6 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import type { FormEvent } from 'react'
-import { predictBorewell } from './api'
+import { checkApiHealth, predictBorewell } from './api'
 import type { BorewellInput, FeatureExplanation, PredictionResult } from './api'
 import './App.css'
 import AssistantChat from './AssistantChat'
@@ -40,6 +40,23 @@ function App() {
   const [result, setResult] = useState<PredictionResult | null>(null)
   const [error, setError] = useState('')
   const [isLoading, setIsLoading] = useState(false)
+  const [apiStatus, setApiStatus] = useState<'checking' | 'ready' | 'offline'>('checking')
+
+  useEffect(() => {
+    let active = true
+    async function updateApiStatus() {
+      const available = await checkApiHealth()
+      if (active) setApiStatus(available ? 'ready' : 'offline')
+    }
+    void updateApiStatus()
+    const timer = window.setInterval(updateApiStatus, 30000)
+    window.addEventListener('focus', updateApiStatus)
+    return () => {
+      active = false
+      window.clearInterval(timer)
+      window.removeEventListener('focus', updateApiStatus)
+    }
+  }, [])
 
   const updateField = (field: keyof BorewellInput, value: string) => {
     setForm((current) => ({
@@ -77,7 +94,7 @@ function App() {
           <span><strong>GeoXAI-Bore</strong><small>Groundwater failure intelligence</small></span>
         </a>
         <nav aria-label="Primary navigation"><a className="active" href="#assessment">Assessment</a><a href="#method">Method</a></nav>
-        <span className="service-pill"><i /> API ready</span>
+        <span className={`service-pill ${apiStatus}`} role="status"><i /> {apiStatus === 'ready' ? 'API ready' : apiStatus === 'offline' ? 'API offline' : 'Connecting'}</span>
       </header>
 
       <section className="hero" id="top">
