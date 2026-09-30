@@ -48,8 +48,9 @@ const API_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:8000'
 
 export type ChatMessage = { role: 'user' | 'assistant'; content: string }
 export type AssistantLanguage = 'en' | 'te'
+export type AssistantAssessment = Pick<PredictionResult, 'risk_category' | 'ensemble_probability' | 'top_features'>
 
-export async function sendChat(messages: ChatMessage[], language: AssistantLanguage): Promise<string> {
+export async function sendChat(messages: ChatMessage[], language: AssistantLanguage, assessment?: AssistantAssessment): Promise<string> {
   const controller = new AbortController()
   const timeout = window.setTimeout(() => controller.abort(), 65000)
   try {
@@ -59,6 +60,7 @@ export async function sendChat(messages: ChatMessage[], language: AssistantLangu
         messages: messages.slice(-19).map((message) => ({ ...message, content: message.content.slice(0, 4000) })),
         language,
         simple_mode: true,
+        assessment,
       }),
       signal: controller.signal,
     })

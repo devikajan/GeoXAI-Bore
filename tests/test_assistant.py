@@ -44,6 +44,24 @@ class AssistantTests(unittest.TestCase):
         self.assertIn("five action steps", instruction)
 
     @patch("backend.gemini_assistant.requests.post")
+    def test_assessment_context_is_grounded_in_system_instruction(self, post):
+        post.return_value = Mock(ok=True, status_code=200)
+        post.return_value.json.return_value = {"candidates": [{"content": {"parts": [{"text": "Check the pump."}]}}]}
+        response = self.client.post("/chat", json={
+            "messages": [{"role": "user", "content": "Explain my result"}],
+            "language": "en",
+            "assessment": {
+                "risk_category": "High",
+                "ensemble_probability": 0.78,
+                "top_features": [{"feature": "Motor temperature", "shap_value": 0.22, "impact": "increases failure risk"}],
+            },
+        })
+        self.assertEqual(response.status_code, 200)
+        instruction = post.call_args.kwargs["json"]["systemInstruction"]["parts"][0]["text"]
+        self.assertIn('"risk_category": "High"', instruction)
+        self.assertIn("trusted application data", instruction)
+
+    @patch("backend.gemini_assistant.requests.post")
     def test_missing_key_does_not_call_provider(self, post):
         with patch.dict(os.environ, {"GEMINI_API_KEY": ""}):
             self.assertEqual(self.request().status_code, 503)
@@ -78,6 +96,13 @@ class AssistantTests(unittest.TestCase):
         response = self.client.post("/chat", json={
             "messages": [{"role": "user", "content": "Hello"}],
             "language": "xx",
+        })
+        self.assertEqual(response.status_code, 422)
+
+    def test_invalid_assessment_is_rejected(self):
+        response = self.client.post("/chat", json={
+            "messages": [{"role": "user", "content": "Explain my result"}],
+            "assessment": {"risk_category": "Critical", "ensemble_probability": 4},
         })
         self.assertEqual(response.status_code, 422)
 

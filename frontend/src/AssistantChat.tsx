@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import type { FormEvent } from 'react'
 import { sendChat } from './api'
-import type { AssistantLanguage, ChatMessage } from './api'
+import type { AssistantLanguage, ChatMessage, PredictionResult } from './api'
 import assistantIcon from './assets/ai-assistant.svg'
 
 type Recognition = {
@@ -33,7 +33,7 @@ const copy = {
   },
 }
 
-export default function AssistantChat() {
+export default function AssistantChat({ result }: { result: PredictionResult | null }) {
   const [open, setOpen] = useState(false)
   const [language, setLanguage] = useState<AssistantLanguage>('en')
   const [messages, setMessages] = useState<ChatMessage[]>([])
@@ -58,7 +58,12 @@ export default function AssistantChat() {
     setMessages(next)
     setInput('')
     try {
-      const reply = await sendChat(next, language)
+      const assessment = result ? {
+        risk_category: result.risk_category,
+        ensemble_probability: result.ensemble_probability,
+        top_features: result.top_features.slice(0, 5),
+      } : undefined
+      const reply = await sendChat(next, language, assessment)
       setMessages([...next, { role: 'assistant', content: reply }])
     } catch (failure) {
       setMessages(messages)
@@ -94,6 +99,7 @@ export default function AssistantChat() {
     {open && <section className="assistant-panel" aria-label={text.title}>
       <div className="assistant-header"><img src={assistantIcon} alt="" /><div><strong>{text.title}</strong><small>{text.subtitle}</small></div><button type="button" onClick={() => setOpen(false)} aria-label={text.close}>×</button></div>
       <div className="assistant-tools" aria-label="Answer language"><button className={language === 'en' ? 'active' : ''} onClick={() => setLanguage('en')} type="button">English</button><button className={language === 'te' ? 'active' : ''} onClick={() => setLanguage('te')} type="button">తెలుగు</button></div>
+      {result && <div className={`assistant-result ${result.risk_category.toLowerCase()}`}><span>{language === 'te' ? 'తాజా ఫలితం జతచేయబడింది' : 'Latest result attached'}</span><strong>{result.risk_category} · {(result.ensemble_probability * 100).toFixed(1)}%</strong></div>}
       <div className="assistant-messages" role="log" aria-live="polite" aria-busy={busy}>
         {!messages.length && <div className="assistant-welcome"><h3>{text.hello}</h3><p>{text.intro}</p><p className="assistant-note">{text.privacy}</p>{text.prompts.map((question) => <button type="button" key={question} onClick={() => { setInput(question); inputRef.current?.focus() }}>{question}</button>)}</div>}
         {messages.map((message, index) => <div className={`assistant-message ${message.role}`} key={index}><small>{message.role === 'user' ? text.you : text.assistant}</small><p>{message.content}</p>{message.role === 'assistant' && <button className="read-answer" type="button" onClick={() => readAnswer(message.content)}>🔊 {text.read}</button>}</div>)}

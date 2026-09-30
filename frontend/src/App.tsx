@@ -147,7 +147,7 @@ function App() {
 
       <section className="method-strip" id="method"><p className="eyebrow">How it works</p><div><strong>01 / Predict</strong><span>Ensemble probability from two tree-based models.</span></div><div><strong>02 / Explain</strong><span>SHAP identifies the strongest risk drivers.</span></div><div><strong>03 / Act</strong><span>Use the signal to prioritize field inspection.</span></div></section>
       <footer><span>GeoXAI-Bore / research demonstrator</span><span>For planning support, not safety-critical decisions</span></footer>
-      <AssistantChat />
+      <AssistantChat result={result} />
     </main>
   )
 }

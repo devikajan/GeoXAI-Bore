@@ -28,10 +28,23 @@ class ChatMessage(BaseModel):
         return value.strip()
 
 
+class RiskDriver(BaseModel):
+    feature: str = Field(min_length=1, max_length=100)
+    shap_value: float
+    impact: str = Field(min_length=1, max_length=200)
+
+
+class AssessmentContext(BaseModel):
+    risk_category: Literal["Low", "Medium", "High"]
+    ensemble_probability: float = Field(ge=0, le=1)
+    top_features: list[RiskDriver] = Field(default_factory=list, max_length=5)
+
+
 class ChatRequest(BaseModel):
     messages: list[ChatMessage] = Field(min_length=1, max_length=20)
     language: Literal["auto", "en", "te"] = "auto"
     simple_mode: bool = True
+    assessment: AssessmentContext | None = None
 
     @field_validator("messages")
     @classmethod
@@ -49,6 +62,7 @@ def chat(data: ChatRequest):
             [message.model_dump() for message in data.messages],
             language=data.language,
             simple_mode=data.simple_mode,
+            assessment=data.assessment.model_dump() if data.assessment else None,
         )}
     except AssistantError as error:
         raise HTTPException(status_code=error.status_code, detail=str(error)) from None
