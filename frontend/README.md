@@ -6,6 +6,7 @@ The GeoXAI-Bore frontend is a React + TypeScript application for individual bore
 
 - Single-borewell prediction using all 13 model inputs
 - Ensemble probability from Random Forest and XGBoost
+- Risk-score, model-comparison, and SHAP contribution graphs
 - SHAP-based feature drivers
 - Risk category and recommended action
 - On-demand GenAI field brief grounded in each prediction
