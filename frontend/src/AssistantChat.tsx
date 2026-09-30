@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import type { FormEvent } from 'react'
+import type { CSSProperties, FormEvent, PointerEvent as ReactPointerEvent } from 'react'
 import { sendChat } from './api'
 import type { AssistantLanguage, ChatMessage, PredictionResult } from './api'
 import assistantIcon from './assets/ai-assistant.svg'
@@ -14,6 +14,10 @@ type Recognition = {
   onend: (() => void) | null
 }
 type RecognitionConstructor = new () => Recognition
+type WidgetPosition = { x: number; y: number }
+type DragState = { pointerId: number; startX: number; startY: number; left: number; top: number; width: number; height: number }
+
+const assistantPositionKey = 'geoxai-assistant-position'
 
 const languageOptions: { code: AssistantLanguage; label: string; voice: string }[] = [
   { code: 'auto', label: 'Auto · Same as message', voice: navigator.language || 'en-IN' },
@@ -38,6 +42,7 @@ const copy = {
     prompts: ['Explain my risk result', 'What pump warning signs should I check?', 'How do I fill the borewell form?'],
     placeholder: 'Type or use the microphone…', send: 'Send', you: 'You', assistant: 'Assistant', thinking: 'Preparing a simple answer…',
     fieldNote: 'For electrical or high-risk problems, call a qualified technician.', clear: 'Clear', open: 'AI help', close: 'Close assistant',
+    move: 'Drag to move', resetPosition: 'Reset position',
     voiceUnavailable: 'Voice input is not available in this browser. You can type your question.', listening: 'Listening… speak now', read: 'Read answer aloud',
   },
   te: {
@@ -46,6 +51,7 @@ const copy = {
     prompts: ['నా ప్రమాద ఫలితాన్ని వివరించండి', 'పంపులో ఏ హెచ్చరికలను చూడాలి?', 'బోరు వివరాల ఫారం ఎలా నింపాలి?'],
     placeholder: 'టైప్ చేయండి లేదా మైక్ ఉపయోగించండి…', send: 'పంపండి', you: 'మీరు', assistant: 'సహాయకుడు', thinking: 'సులభమైన సమాధానం సిద్ధం చేస్తున్నాను…',
     fieldNote: 'విద్యుత్ లేదా అధిక ప్రమాద సమస్యలకు నిపుణుడిని పిలవండి.', clear: 'తొలగించు', open: 'AI సహాయం', close: 'సహాయకుడిని మూసివేయండి',
+    move: 'తరలించడానికి లాగండి', resetPosition: 'స్థానాన్ని రీసెట్ చేయండి',
     voiceUnavailable: 'ఈ బ్రౌజర్‌లో వాయిస్ అందుబాటులో లేదు. మీ ప్రశ్నను టైప్ చేయండి.', listening: 'వింటున్నాను… ఇప్పుడు మాట్లాడండి', read: 'సమాధానం వినండి',
   },
 }
@@ -58,6 +64,11 @@ export default function AssistantChat({ result }: { result: PredictionResult | n
   const [busy, setBusy] = useState(false)
   const [listening, setListening] = useState(false)
   const [error, setError] = useState('')
+  const [position, setPosition] = useState<WidgetPosition | null>(() => loadAssistantPosition())
+  const [dragging, setDragging] = useState(false)
+  const widgetRef = useRef<HTMLDivElement>(null)
+  const dragRef = useRef<DragState | null>(null)
+  const positionRef = useRef<WidgetPosition | null>(position)
   const bottom = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
   const recognitionRef = useRef<Recognition | null>(null)
@@ -66,6 +77,24 @@ export default function AssistantChat({ result }: { result: PredictionResult | n
 
   useEffect(() => { bottom.current?.scrollIntoView({ block: 'nearest' }) }, [messages, busy, open])
   useEffect(() => { if (open) inputRef.current?.focus() }, [open])
+  useEffect(() => {
+    function keepAssistantOnScreen() {
+      if (!positionRef.current) return
+      const bounds = widgetRef.current?.getBoundingClientRect()
+      if (!bounds) return
+      const margin = 8
+      const left = clamp(bounds.left, margin, window.innerWidth - bounds.width - margin)
+      const top = clamp(bounds.top, margin, window.innerHeight - bounds.height - margin)
+      if (left === bounds.left && top === bounds.top) return
+      const nextPosition = { x: left + bounds.width, y: top + bounds.height }
+      positionRef.current = nextPosition
+      setPosition(nextPosition)
+      window.localStorage.setItem(assistantPositionKey, JSON.stringify(nextPosition))
+    }
+    const frame = window.requestAnimationFrame(keepAssistantOnScreen)
+    window.addEventListener('resize', keepAssistantOnScreen)
+    return () => { window.cancelAnimationFrame(frame); window.removeEventListener('resize', keepAssistantOnScreen) }
+  }, [open])
   useEffect(() => () => {
     window.speechSynthesis.cancel()
     recognitionRef.current?.stop()
@@ -77,6 +106,49 @@ export default function AssistantChat({ result }: { result: PredictionResult | n
     recognitionRef.current = null
     setListening(false)
     setOpen(false)
+  }
+
+  function startDragging(event: ReactPointerEvent<HTMLDivElement>) {
+    if (event.button !== 0 || (event.target as HTMLElement).closest('button')) return
+    const bounds = widgetRef.current?.getBoundingClientRect()
+    if (!bounds) return
+    dragRef.current = {
+      pointerId: event.pointerId,
+      startX: event.clientX,
+      startY: event.clientY,
+      left: bounds.left,
+      top: bounds.top,
+      width: bounds.width,
+      height: bounds.height,
+    }
+    event.currentTarget.setPointerCapture(event.pointerId)
+    setDragging(true)
+  }
+
+  function moveAssistant(event: ReactPointerEvent<HTMLDivElement>) {
+    const drag = dragRef.current
+    if (!drag || drag.pointerId !== event.pointerId) return
+    const margin = 8
+    const left = clamp(drag.left + event.clientX - drag.startX, margin, window.innerWidth - drag.width - margin)
+    const top = clamp(drag.top + event.clientY - drag.startY, margin, window.innerHeight - drag.height - margin)
+    const nextPosition = { x: left + drag.width, y: top + drag.height }
+    positionRef.current = nextPosition
+    setPosition(nextPosition)
+  }
+
+  function stopDragging(event: ReactPointerEvent<HTMLDivElement>) {
+    if (dragRef.current?.pointerId !== event.pointerId) return
+    dragRef.current = null
+    setDragging(false)
+    if (positionRef.current) window.localStorage.setItem(assistantPositionKey, JSON.stringify(positionRef.current))
+  }
+
+  function resetPosition() {
+    dragRef.current = null
+    positionRef.current = null
+    setDragging(false)
+    setPosition(null)
+    window.localStorage.removeItem(assistantPositionKey)
   }
 
   async function submit(event: FormEvent) {
@@ -127,9 +199,11 @@ export default function AssistantChat({ result }: { result: PredictionResult | n
     window.speechSynthesis.speak(speech)
   }
 
-  return <div className="assistant-widget">
+  const widgetStyle = position ? { left: position.x, top: position.y, transform: 'translate(-100%, -100%)' } as CSSProperties : undefined
+
+  return <div className={`assistant-widget ${dragging ? 'is-dragging' : ''}`} ref={widgetRef} style={widgetStyle}>
     {open && <section className="assistant-panel" aria-label={text.title}>
-      <div className="assistant-header"><img src={assistantIcon} alt="" /><div><strong>{text.title}</strong><small>{text.subtitle}</small></div><button type="button" onClick={closeAssistant} aria-label={text.close}>×</button></div>
+      <div className="assistant-header" onPointerDown={startDragging} onPointerMove={moveAssistant} onPointerUp={stopDragging} onPointerCancel={stopDragging}><img src={assistantIcon} alt="" /><div><strong>{text.title}</strong><small>{text.move}</small></div><button className="assistant-position-reset" type="button" onClick={resetPosition} aria-label={text.resetPosition} title={text.resetPosition}>↺</button><button type="button" onClick={closeAssistant} aria-label={text.close}>×</button></div>
       <div className="assistant-tools"><label htmlFor="assistant-language">Answer language</label><select id="assistant-language" value={language} onChange={(event) => setLanguage(event.target.value as AssistantLanguage)}>{languageOptions.map((option) => <option key={option.code} value={option.code}>{option.label}</option>)}</select></div>
       {result && <div className={`assistant-result ${result.risk_category.toLowerCase()}`}><span>{language === 'te' ? 'తాజా ఫలితం జతచేయబడింది' : 'Latest result attached'}</span><strong>{result.risk_category} · {(result.ensemble_probability * 100).toFixed(1)}%</strong></div>}
       <div className="assistant-messages" role="log" aria-live="polite" aria-busy={busy}>
@@ -145,4 +219,16 @@ export default function AssistantChat({ result }: { result: PredictionResult | n
     </section>}
     <button className="assistant-launcher" type="button" aria-expanded={open} onClick={() => open ? closeAssistant() : setOpen(true)}><img src={assistantIcon} alt="" />{open ? text.close : text.open}</button>
   </div>
+}
+
+function loadAssistantPosition(): WidgetPosition | null {
+  try {
+    const stored = JSON.parse(window.localStorage.getItem(assistantPositionKey) ?? 'null') as WidgetPosition | null
+    if (stored && Number.isFinite(stored.x) && Number.isFinite(stored.y)) return stored
+  } catch { /* Ignore invalid saved positions. */ }
+  return null
+}
+
+function clamp(value: number, minimum: number, maximum: number) {
+  return Math.min(Math.max(value, minimum), Math.max(minimum, maximum))
 }
