@@ -46,6 +46,27 @@ export const requiredInputFields: (keyof BorewellInput)[] = [
 
 const API_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:8000'
 
+export type ChatMessage = { role: 'user' | 'assistant'; content: string }
+
+export async function sendChat(messages: ChatMessage[]): Promise<string> {
+  const controller = new AbortController()
+  const timeout = window.setTimeout(() => controller.abort(), 65000)
+  try {
+    const response = await fetch(`${API_URL}/chat`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ messages: messages.slice(-19).map((message) => ({ ...message, content: message.content.slice(0, 4000) })) }),
+      signal: controller.signal,
+    })
+    const data = await response.json()
+    if (!response.ok) throw new Error(typeof data.detail === 'string' ? data.detail : 'The assistant could not process this message.')
+    return data.reply
+  } catch (error) {
+    if (error instanceof DOMException && error.name === 'AbortError') throw new Error('The assistant took too long. Please try again.')
+    if (error instanceof TypeError) throw new Error('Cannot reach the assistant. Start the backend on port 8000.')
+    throw error
+  } finally { window.clearTimeout(timeout) }
+}
+
 export async function predictBorewell(input: BorewellInput): Promise<PredictionResult> {
   const response = await fetch(`${API_URL}/predict`, {
     method: 'POST',

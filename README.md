@@ -1,5 +1,7 @@
 # GeoXAI-Bore
 
+Gemini chatbot setup: see [AI assistant instructions](docs/AI_ASSISTANT.md).
+
 ![Python](https://img.shields.io/badge/Python-3.11-blue)
 ![Machine Learning](https://img.shields.io/badge/Machine%20Learning-Random%20Forest%20%7C%20XGBoost-green)
 ![Explainable AI](https://img.shields.io/badge/Explainable%20AI-SHAP-orange)
@@ -191,5 +193,4 @@ GeoXAI-Bore/
 ## License
 
 This project is developed for academic and research purposes.
-
 

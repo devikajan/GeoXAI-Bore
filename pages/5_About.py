@@ -5,6 +5,8 @@ st.set_page_config(page_title="About | GeoXAI-Bore", page_icon="ℹ️", layout=
 inject_css()
 
 with st.sidebar:
+    st.page_link("pages/6_AI_Assistant.py", label="AI Assistant")
+
     st.markdown("###  GeoXAI-Bore")
     st.caption("Borewell Failure Intelligence")
     st.markdown("---")

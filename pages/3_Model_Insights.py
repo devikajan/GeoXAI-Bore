@@ -10,6 +10,8 @@ st.set_page_config(page_title="Model Insights | GeoXAI-Bore", page_icon="🧠", 
 inject_css()
 
 with st.sidebar:
+    st.page_link("pages/6_AI_Assistant.py", label="AI Assistant")
+
     st.markdown("### GeoXAI-Bore")
     st.caption("Borewell Failure Intelligence")
     st.markdown("---")

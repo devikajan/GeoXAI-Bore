@@ -6,7 +6,6 @@ from utils.theme import (
     inject_css,
     hero,
     metric_card,
-    risk_badge,
     RISK_COLORS,
     MUTED,
     BORDER,
@@ -23,20 +22,145 @@ from utils.data_helpers import load_dataset, load_metrics
 
 st.set_page_config(
     page_title="GeoXAI-Bore | Borewell Failure Prediction",
+    page_icon=None,
     layout="wide",
     initial_sidebar_state="expanded",
 )
 
 
 # =========================================================
-# CUSTOM STYLING
+# LOAD EXISTING PROJECT STYLES
 # =========================================================
 
 inject_css()
 
 
 # =========================================================
-# LOAD PROJECT DATA
+# ADDITIONAL PROFESSIONAL DASHBOARD STYLES
+# =========================================================
+
+st.markdown(
+    """
+    <style>
+
+    /* Main content spacing */
+    .block-container {
+        padding-top: 2rem;
+        padding-bottom: 2rem;
+        max-width: 1400px;
+    }
+
+    /* Sidebar */
+    section[data-testid="stSidebar"] {
+        border-right: 1px solid rgba(120, 130, 145, 0.15);
+    }
+
+    /* Sidebar title */
+    .sidebar-brand {
+        font-size: 1.15rem;
+        font-weight: 700;
+        letter-spacing: -0.02em;
+        margin-bottom: 0.15rem;
+    }
+
+    .sidebar-subtitle {
+        font-size: 0.78rem;
+        color: #6B7280;
+        margin-bottom: 1.2rem;
+    }
+
+    /* Section headings */
+    .section-heading {
+        font-size: 1.05rem;
+        font-weight: 650;
+        letter-spacing: -0.01em;
+        margin-top: 0.4rem;
+        margin-bottom: 0.8rem;
+    }
+
+    /* Professional feature cards */
+    .feature-card {
+        background: rgba(255, 255, 255, 0.72);
+        border: 1px solid rgba(120, 130, 145, 0.18);
+        border-radius: 14px;
+        padding: 1.25rem;
+        min-height: 175px;
+        transition: all 0.2s ease;
+    }
+
+    .feature-card:hover {
+        border-color: rgba(0, 180, 216, 0.45);
+        transform: translateY(-2px);
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
+    }
+
+    .feature-number {
+        font-size: 0.72rem;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        color: #6B7280;
+        margin-bottom: 0.9rem;
+    }
+
+    .feature-title {
+        font-size: 1rem;
+        font-weight: 650;
+        color: #172033;
+        margin-bottom: 0.55rem;
+    }
+
+    .feature-description {
+        font-size: 0.84rem;
+        line-height: 1.55;
+        color: #687386;
+    }
+
+    /* Dashboard information strip */
+    .info-strip {
+        background: rgba(0, 180, 216, 0.06);
+        border: 1px solid rgba(0, 180, 216, 0.14);
+        border-radius: 12px;
+        padding: 0.9rem 1rem;
+        margin-top: 0.5rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .info-title {
+        font-size: 0.82rem;
+        font-weight: 650;
+        color: #172033;
+        margin-bottom: 0.15rem;
+    }
+
+    .info-text {
+        font-size: 0.78rem;
+        color: #687386;
+    }
+
+    /* Chart containers */
+    .chart-heading {
+        font-size: 0.95rem;
+        font-weight: 650;
+        color: #172033;
+        margin-bottom: 0.2rem;
+    }
+
+    /* Footer */
+    .dashboard-footer {
+        text-align: center;
+        color: #7A8494;
+        font-size: 0.75rem;
+        padding-top: 0.8rem;
+    }
+
+    </style>
+    """,
+    unsafe_allow_html=True,
+)
+
+
+# =========================================================
+# LOAD PROJECT DATA SAFELY
 # =========================================================
 
 try:
@@ -47,13 +171,13 @@ except FileNotFoundError:
     st.error("Required project data files could not be found.")
     st.info(
         "Please make sure the required dataset and model "
-        "metrics files are present in the project."
+        "metrics files are available in the project."
     )
     st.stop()
 
 except Exception as error:
     st.error("An error occurred while loading the project data.")
-    st.caption(f"Error details: {error}")
+    st.caption(f"Details: {error}")
     st.stop()
 
 
@@ -62,11 +186,11 @@ except Exception as error:
 # =========================================================
 
 if not isinstance(df, pd.DataFrame):
-    st.error("The dataset could not be loaded correctly.")
+    st.error("The project dataset could not be loaded correctly.")
     st.stop()
 
 if df.empty:
-    st.warning("The dataset is empty.")
+    st.warning("The project dataset is empty.")
     st.stop()
 
 
@@ -94,52 +218,57 @@ if missing_columns:
 # =========================================================
 
 with st.sidebar:
+    st.page_link("pages/6_AI_Assistant.py", label="AI Assistant")
 
-    st.markdown("### GeoXAI-Bore")
-    st.caption("Borewell Failure Intelligence")
+
+    st.markdown(
+        '<div class="sidebar-brand">GeoXAI-Bore</div>',
+        unsafe_allow_html=True,
+    )
+
+    st.markdown(
+        '<div class="sidebar-subtitle">'
+        'Borewell Failure Intelligence'
+        '</div>',
+        unsafe_allow_html=True,
+    )
 
     st.markdown("---")
 
     st.page_link(
         "app.py",
         label="Overview",
-        icon="🏠",
     )
 
     st.page_link(
         "pages/1_Predict_Failure.py",
         label="Predict Failure",
-        icon="🔍",
     )
 
     st.page_link(
         "pages/2_Analytics_Dashboard.py",
         label="Analytics Dashboard",
-        icon="📊",
     )
 
     st.page_link(
         "pages/3_Model_Insights.py",
         label="Model Insights",
-        icon="🧠",
     )
 
     st.page_link(
         "pages/4_Batch_Prediction.py",
         label="Batch Prediction",
-        icon="📁",
     )
 
     st.page_link(
         "pages/5_About.py",
         label="About & Methodology",
-        icon="ℹ️",
     )
 
     st.markdown("---")
 
     st.caption(
-        "v1.0 · Demo dataset, synthetically generated for illustration"
+        "GeoXAI-Bore · Research Prototype"
     )
 
 
@@ -149,11 +278,32 @@ with st.sidebar:
 
 hero(
     "Groundwater infrastructure analytics",
-    "Predict borewell failure before it happens",
-    "AquaGuard combines pump telemetry, hydrogeological data, "
-    "and maintenance history to flag borewells at risk of "
-    "failure — so field teams can act before water access "
-    "is disrupted.",
+    "Borewell failure prediction and risk intelligence",
+    "GeoXAI-Bore combines borewell characteristics, pump "
+    "telemetry, hydrogeological variables and maintenance "
+    "information to identify sites associated with elevated "
+    "failure risk.",
+)
+
+
+# =========================================================
+# PROJECT INFORMATION
+# =========================================================
+
+st.markdown(
+    """
+    <div class="info-strip">
+        <div class="info-title">
+            Groundwater Risk Intelligence
+        </div>
+        <div class="info-text">
+            Use the dashboard to examine the monitored borewell
+            population, understand risk patterns and explore
+            model-based failure predictions.
+        </div>
+    </div>
+    """,
+    unsafe_allow_html=True,
 )
 
 
@@ -172,16 +322,18 @@ metric_card(
 )
 
 
-# High-risk percentage
+# Risk categories
 risk_categories = (
     df["Failure_Risk_Category"]
     .astype(str)
     .str.strip()
 )
 
+
 high_risk_pct = (
     risk_categories.eq("High").mean() * 100
 )
+
 
 metric_card(
     "High-risk sites",
@@ -198,6 +350,7 @@ try:
 except (KeyError, TypeError, ValueError):
     accuracy = 0.0
 
+
 metric_card(
     "Model accuracy",
     f"{accuracy * 100:.1f}%",
@@ -213,8 +366,9 @@ try:
 except (KeyError, TypeError, ValueError):
     roc_auc = 0.0
 
+
 metric_card(
-    "ROC-AUC score",
+    "ROC-AUC",
     f"{roc_auc:.2f}",
     c4,
 )
@@ -231,8 +385,14 @@ st.markdown(
 
 
 # =========================================================
-# RISK ANALYSIS
+# ANALYTICS SECTION
 # =========================================================
+
+st.markdown(
+    '<div class="section-heading">Risk analytics</div>',
+    unsafe_allow_html=True,
+)
+
 
 left, right = st.columns([1.3, 1])
 
@@ -244,7 +404,10 @@ left, right = st.columns([1.3, 1])
 with left:
 
     st.markdown(
-        "#### Risk distribution across monitored borewells"
+        '<div class="chart-heading">'
+        'Risk distribution across monitored borewells'
+        '</div>',
+        unsafe_allow_html=True,
     )
 
     risk_counts = (
@@ -278,7 +441,7 @@ with left:
         plot_bgcolor="rgba(0,0,0,0)",
         paper_bgcolor="rgba(0,0,0,0)",
         margin=dict(
-            t=10,
+            t=20,
             b=10,
             l=10,
             r=10,
@@ -300,14 +463,20 @@ with left:
 with right:
 
     st.markdown(
-        "#### Risk by soil type"
+        '<div class="chart-heading">'
+        'Risk distribution by soil type'
+        '</div>',
+        unsafe_allow_html=True,
     )
 
-    soil_risk = pd.crosstab(
-        df["Soil_Type"],
-        risk_categories,
-        normalize="index",
-    ) * 100
+    soil_risk = (
+        pd.crosstab(
+            df["Soil_Type"],
+            risk_categories,
+            normalize="index",
+        )
+        * 100
+    )
 
     soil_risk = soil_risk.reindex(
         columns=["Low", "Medium", "High"],
@@ -329,7 +498,7 @@ with right:
         plot_bgcolor="rgba(0,0,0,0)",
         paper_bgcolor="rgba(0,0,0,0)",
         margin=dict(
-            t=10,
+            t=20,
             b=10,
             l=10,
             r=10,
@@ -346,7 +515,7 @@ with right:
 
 
 # =========================================================
-# FEATURES
+# PLATFORM FEATURES
 # =========================================================
 
 st.markdown(
@@ -355,8 +524,10 @@ st.markdown(
 )
 
 st.markdown(
-    "#### What you can do here"
+    '<div class="section-heading">Platform modules</div>',
+    unsafe_allow_html=True,
 )
+
 
 g1, g2, g3, g4 = st.columns(4)
 
@@ -364,79 +535,47 @@ g1, g2, g3, g4 = st.columns(4)
 cards = [
     (
         g1,
-        "🔍",
+        "01",
         "Predict Failure",
-        "Enter a single borewell's specs and get an "
-        "instant risk score with explanations.",
+        "Evaluate an individual borewell and obtain a "
+        "model-based failure risk assessment.",
     ),
     (
         g2,
-        "📊",
+        "02",
         "Analytics Dashboard",
-        "Explore the full monitored fleet — filter by "
-        "region, soil type, and risk level.",
+        "Explore borewell patterns across regions, "
+        "soil types and risk categories.",
     ),
     (
         g3,
-        "🧠",
+        "03",
         "Model Insights",
-        "See which factors drive failure risk and how "
-        "the model performs.",
+        "Examine model performance and the factors "
+        "associated with failure risk.",
     ),
     (
         g4,
-        "📁",
+        "04",
         "Batch Prediction",
-        "Upload a CSV of multiple borewells and score "
-        "them all at once.",
+        "Process multiple borewells from a CSV file "
+        "and generate predictions in one workflow.",
     ),
 ]
 
 
-for col, icon, title, desc in cards:
+for col, number, title, description in cards:
+
+    card_html = f"""
+<div class="feature-card">
+    <div class="feature-number">{number}</div>
+    <div class="feature-title">{title}</div>
+    <div class="feature-description">{description}</div>
+</div>
+"""
 
     col.markdown(
-        f"""
-        <div class="bw-card"
-             style="
-                min-height:190px;
-                display:flex;
-                flex-direction:column;
-             ">
-
-            <div style="
-                width:42px;
-                height:42px;
-                border-radius:11px;
-                background:{ACCENT}17;
-                display:flex;
-                align-items:center;
-                justify-content:center;
-                font-size:1.15rem;
-                margin-bottom:0.85rem;
-            ">
-                {icon}
-            </div>
-
-            <div style="
-                font-weight:600;
-                font-size:1.02rem;
-                margin-bottom:0.4rem;
-                color:{INK};
-            ">
-                {title}
-            </div>
-
-            <div style="
-                color:{MUTED};
-                font-size:0.87rem;
-                line-height:1.55;
-            ">
-                {desc}
-            </div>
-
-        </div>
-        """,
+        card_html,
         unsafe_allow_html=True,
     )
 
@@ -450,9 +589,14 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-st.caption(
-    "⚠️ This application uses a synthetically generated "
-    "dataset for demonstration purposes. Replace with real "
-    "sensor and maintenance records before using for "
-    "operational decisions."
+st.markdown(
+    """
+    <div class="dashboard-footer">
+        GeoXAI-Bore · Explainable borewell failure prediction
+        and groundwater risk intelligence
+        <br>
+        Research prototype using a synthetic demonstration dataset
+    </div>
+    """,
+    unsafe_allow_html=True,
 )

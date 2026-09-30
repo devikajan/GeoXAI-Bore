@@ -3,6 +3,7 @@ import type { ChangeEvent, FormEvent } from 'react'
 import { predictBatch, predictBorewell, requiredInputFields } from './api'
 import type { BorewellInput, FeatureExplanation, PredictionResult } from './api'
 import './App.css'
+import AssistantChat from './AssistantChat'
 
 const initialForm: BorewellInput = {
   Borewell_Depth_ft: 450,
@@ -146,6 +147,7 @@ function App() {
 
       <section className="method-strip" id="method"><p className="eyebrow">How it works</p><div><strong>01 / Predict</strong><span>Ensemble probability from two tree-based models.</span></div><div><strong>02 / Explain</strong><span>SHAP identifies the strongest risk drivers.</span></div><div><strong>03 / Act</strong><span>Use the signal to prioritize field inspection.</span></div></section>
       <footer><span>GeoXAI-Bore / research demonstrator</span><span>For planning support, not safety-critical decisions</span></footer>
+      <AssistantChat />
     </main>
   )
 }

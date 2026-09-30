@@ -1,5 +1,7 @@
 """Shared visual identity for the Borewell Failure Prediction app — water theme."""
 
+from html import escape
+
 import streamlit as st
 
 # ---- Water-inspired palette ----
@@ -30,10 +32,19 @@ def inject_css():
         }}
 
         .stApp {{
+            color: {INK};
             background: {BG};
             background-image:
                 radial-gradient(circle at 15% 0%, {ACCENT_LIGHT}22 0%, transparent 40%),
                 radial-gradient(circle at 90% 10%, {PRIMARY_LIGHT}1a 0%, transparent 35%);
+        }}
+
+        header[data-testid="stHeader"] {{
+            background: {BG};
+        }}
+
+        .section-heading {{
+            color: {INK};
         }}
 
         section[data-testid="stSidebar"] {{
@@ -216,8 +227,8 @@ def metric_card(label: str, value: str, col=None):
     target.markdown(
         f"""
         <div class="bw-metric">
-            <div class="lbl"><</div>
-            <div class="val">{value}</div>
+            <div class="lbl">{escape(label)}</div>
+            <div class="val">{escape(value)}</div>
         </div>
         """,
         unsafe_allow_html=True,

@@ -9,6 +9,8 @@ inject_css()
 df = load_dataset()
 
 with st.sidebar:
+    st.page_link("pages/6_AI_Assistant.py", label="AI Assistant")
+
     st.markdown("###  GeoXAI-Bore")
     st.caption("Borewell Failure Intelligence")
     st.markdown("---")
