@@ -98,9 +98,11 @@ function App() {
       </header>
 
       <section className="hero" id="top">
-        <div className="hero-copy"><p className="eyebrow">Single-site assessment / 01</p><h1>Know the risk before the water stops.</h1><p className="hero-text">Combine field conditions, pump telemetry, and maintenance history to surface a six-month failure risk for one borewell.</p><div className="hero-note"><span>13</span> signals evaluated by a Random Forest + XGBoost ensemble</div></div>
-        <div className="hero-diagram" aria-label="Borewell monitoring illustration"><div className="rings"><span /><span /><span /></div><div className="well-line"><b>WELL</b><span>2,840 ft monitored depth</span></div><div className="water-line"><span>aquifer layer</span></div></div>
+        <div className="hero-copy"><p className="eyebrow">Explainable groundwater intelligence</p><h1>Know the risk before the water stops.</h1><p className="hero-text">Combine field conditions, pump telemetry, and maintenance history to surface an explainable six-month failure risk for one borewell.</p><div className="hero-actions"><a className="hero-primary" href="#assessment">Run an assessment <span>→</span></a><a className="hero-secondary" href="#method">Explore the method</a></div><div className="hero-note"><span>13</span> signals evaluated by a Random Forest + XGBoost ensemble</div></div>
+        <div className="hero-diagram" aria-label="Borewell monitoring illustration"><div className="diagram-status"><span>Live model</span><strong>RF + XGB</strong></div><div className="rings"><span /><span /><span /></div><div className="well-line"><b>WELL</b><span>single-site risk profile</span></div><div className="water-line"><span>aquifer layer</span></div></div>
       </section>
+
+      <section className="proof-strip" aria-label="Model highlights"><div><strong>13</strong><span>Field and equipment signals</span></div><div><strong>02</strong><span>Models in the ensemble</span></div><div><strong>05</strong><span>Top SHAP factors explained</span></div><div><strong>06 mo</strong><span>Prediction horizon</span></div></section>
 
       <section className="workspace" id="assessment">
         <form className="assessment-form" onSubmit={submitPrediction}>
@@ -127,7 +129,7 @@ function App() {
         </form>
 
         <aside className={`result-panel ${result ? 'has-result' : ''}`} aria-live="polite">
-          {result ? <><ResultView result={result} probability={probability} /><button className="genai-button" type="button" disabled title="GenAI integration is not available yet">Generate field brief ✦</button></> : <div className="empty-result"><div className="target-icon">◎</div><p className="eyebrow">Awaiting profile</p><h2>Your risk signal will appear here.</h2><p>Complete the profile and run an assessment to see the ensemble probability and the factors shaping it.</p><div className="empty-rule"><span /><small>Model output</small><span /></div></div>}
+          {result ? <ResultView result={result} probability={probability} /> : <div className="empty-result"><span className="result-kicker">Live model output</span><div className="target-icon">◎</div><p className="eyebrow">Awaiting profile</p><h2>Your risk signal will appear here.</h2><p>Complete the profile and run an assessment to see the ensemble probability and the factors shaping it.</p><div className="empty-rule"><span /><small>Explainable prediction</small><span /></div></div>}
         </aside>
       </section>
 
