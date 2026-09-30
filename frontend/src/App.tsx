@@ -67,7 +67,7 @@ function App() {
       if (active) setApiStatus(available ? 'ready' : 'offline')
     }
     void updateApiStatus()
-    const timer = window.setInterval(updateApiStatus, 30000)
+    const timer = window.setInterval(updateApiStatus, 60000)
     window.addEventListener('focus', updateApiStatus)
     return () => {
       active = false
@@ -128,7 +128,7 @@ function App() {
           <span><strong>GeoXAI-Bore</strong><small>Groundwater failure intelligence</small></span>
         </a>
         <nav aria-label="Primary navigation"><a className="active" href="#assessment">Assessment</a><a href="#method">Method</a></nav>
-        <span className={`service-pill ${apiStatus}`} role="status"><i /> {apiStatus === 'ready' ? 'API ready' : apiStatus === 'offline' ? 'API offline' : 'Connecting'}</span>
+        <span className={`service-pill ${apiStatus}`} role="status"><i /> {apiStatus === 'ready' ? 'API ready' : apiStatus === 'offline' ? 'API unavailable' : 'API waking up'}</span>
       </header>
 
       <section className="hero" id="top" data-spotlight="dark">
@@ -161,7 +161,7 @@ function App() {
             <NumberField label="Maintenance visits" suffix="per year" value={form.Maintenance_Frequency_per_year} min={0} max={6} step={1} onChange={(value) => updateField('Maintenance_Frequency_per_year', value)} />
           </div></fieldset>
           <div className="form-actions"><button className="primary-button" type="submit" disabled={isLoading}>{isLoading ? 'Assessing...' : 'Run assessment'} <span>→</span></button><button className="quiet-button" type="button" onClick={resetForm}>Reset fields</button></div>
-          {error && <div className="error-banner" role="alert"><strong>Prediction unavailable.</strong> {error}<small>Start the API with <code>uvicorn backend.main:app --reload</code>.</small></div>}
+          {error && <div className="error-banner" role="alert"><strong>Prediction unavailable.</strong> {error}<small>The hosted service may be waking up. Wait a moment and try again.</small></div>}
         </form>
 
         <aside className={`result-panel ${result ? 'has-result' : ''}`} aria-live="polite" data-spotlight="light">
