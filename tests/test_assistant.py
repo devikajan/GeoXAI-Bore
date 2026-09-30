@@ -1,5 +1,6 @@
 import os
 import unittest
+from pathlib import Path
 from unittest.mock import Mock, patch
 
 import requests
@@ -13,6 +14,9 @@ class AssistantTests(unittest.TestCase):
         self.environment = patch.dict(os.environ, {"GEMINI_API_KEY": "test-key", "GEMINI_MODEL": "gemini-3.1-flash-lite"})
         self.environment.start()
         self.addCleanup(self.environment.stop)
+        self.env_file = patch("backend.gemini_assistant.ENV_PATH", Path("__missing_test_env__"))
+        self.env_file.start()
+        self.addCleanup(self.env_file.stop)
 
     def request(self):
         return self.client.post("/chat", json={"messages": [{"role": "user", "content": "Explain SHAP"}]})

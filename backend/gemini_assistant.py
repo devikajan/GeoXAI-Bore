@@ -5,9 +5,9 @@ import re
 from pathlib import Path
 
 import requests
-from dotenv import load_dotenv
+from dotenv import dotenv_values
 
-load_dotenv(Path(__file__).resolve().parents[1] / ".env")
+ENV_PATH = Path(__file__).resolve().parents[1] / ".env"
 
 SYSTEM_PROMPT = """You are the GeoXAI-Bore field assistant for people with different
 levels of technical experience. Help with borewell inputs, groundwater, pump maintenance, risk results,
@@ -35,10 +35,14 @@ class AssistantError(Exception):
 
 
 def chat_reply(messages, language="auto", simple_mode=True, assessment=None):
-    key = os.getenv("GEMINI_API_KEY", "").strip()
+    file_settings = dotenv_values(ENV_PATH) if ENV_PATH.exists() else {}
+    file_key = str(file_settings.get("GEMINI_API_KEY") or "").strip()
+    env_key = os.getenv("GEMINI_API_KEY", "").strip()
+    placeholders = {"replace_with_your_server_side_key", "your_key"}
+    key = file_key if file_key and file_key not in placeholders else env_key
     if not key or key in {"replace_with_your_server_side_key", "your_key"}:
-        raise AssistantError("AI assistant is not configured. Set GEMINI_API_KEY in the root .env file and restart the server.")
-    model = os.getenv("GEMINI_MODEL", "gemini-3.1-flash-lite").strip()
+        raise AssistantError("AI assistant is not configured. Save GEMINI_API_KEY in the root .env file and try again.")
+    model = str(file_settings.get("GEMINI_MODEL") or os.getenv("GEMINI_MODEL") or "gemini-3.1-flash-lite").strip()
     if not re.fullmatch(r"[A-Za-z0-9._-]+", model):
         raise AssistantError("GEMINI_MODEL configuration is invalid.")
     if language not in LANGUAGE_INSTRUCTIONS:
