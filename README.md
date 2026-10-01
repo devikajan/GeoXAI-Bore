@@ -174,23 +174,6 @@ GeoXAI-Bore/
 
 ---
 
-## Current Status
-
-- [x] Repository setup
-- [x] Project architecture
-- [x] Literature review
-- [x] Dataset collection
-- [x] Data preprocessing
-- [x] Feature engineering
-- [x] Model development
-- [x] SHAP explainability
-- [ ] GenAI integration
-- [x] Dashboard development
-- [x] Research paper
-- [ ] Deployment
-
----
-
 ## Team
 
 - **Devika Janardhanan**
