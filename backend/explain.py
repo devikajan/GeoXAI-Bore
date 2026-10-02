@@ -1,10 +1,16 @@
 import shap
 import pandas as pd
+from functools import lru_cache
 
 from backend.model import (
     random_forest,
     preprocessor
 )
+
+
+@lru_cache(maxsize=1)
+def get_explainer():
+    return shap.TreeExplainer(random_forest)
 
 
 def explain_borewell(data):
@@ -16,7 +22,7 @@ def explain_borewell(data):
     processed_data = preprocessor.transform(input_data)
 
     # Create SHAP explainer
-    explainer = shap.TreeExplainer(random_forest)
+    explainer = get_explainer()
 
     # Calculate SHAP values
     shap_values = explainer.shap_values(processed_data)

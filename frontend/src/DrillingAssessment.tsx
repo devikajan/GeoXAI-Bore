@@ -9,9 +9,9 @@ export default function DrillingAssessment({ result, onResult }: {
   onResult: (result: SiteResult | null) => void
 }) {
   const [sites, setSites] = useState<ReferenceSite[]>([])
-  const [district, setDistrict] = useState('')
-  const [siteId, setSiteId] = useState('')
-  const [target, setTarget] = useState(1000)
+  const [district, setDistrict] = useState(result?.site.district ?? '')
+  const [siteId, setSiteId] = useState(result?.site.id ?? '')
+  const [target, setTarget] = useState(result?.desired_yield_lph ?? 1000)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
   const [catalogueError, setCatalogueError] = useState('')

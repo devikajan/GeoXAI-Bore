@@ -1,4 +1,6 @@
 import os
+from contextlib import asynccontextmanager
+from threading import Thread
 from pathlib import Path
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
@@ -28,7 +30,14 @@ def resolve_cors_origins():
     return list(dict.fromkeys((*LOCAL_CORS_ORIGINS, *deployment_origins)))
 
 
-app = FastAPI()
+@asynccontextmanager
+async def lifespan(app):
+    from backend.startup import prepare_prediction_runtime
+    Thread(target=prepare_prediction_runtime, daemon=True, name='prediction-startup').start()
+    yield
+
+
+app = FastAPI(lifespan=lifespan)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=resolve_cors_origins(),

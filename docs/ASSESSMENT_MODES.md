@@ -33,6 +33,8 @@ The legacy `POST /drilling/assess` depth comparison remains for API compatibilit
 `POST /predict` retains the 13-feature Random Forest/XGBoost model, six-month
 failure score, SHAP graphs and multilingual explanations. It is a research model
 trained on synthetic labels, not a field-validated forecast.
+Maintenance libraries and the cached SHAP explainer prepare in a background
+startup thread so initial navigation can overlap their loading.
 English explanations are immediate and derived from the model output; only
 translations invoke Gemini. Changing modes clears the assistant conversation.
 
