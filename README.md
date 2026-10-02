@@ -1,6 +1,6 @@
 # GeoXAI-Bore
 
-The website has two assessment options: **New drilling** (a preliminary depth check;
+The website has two assessment options: **New drilling** (location-based groundwater evidence;
 drilling success prediction awaits outcome data) and **Maintenance** (the existing
 six-month failure-risk model). See [assessment modes](docs/ASSESSMENT_MODES.md).
 

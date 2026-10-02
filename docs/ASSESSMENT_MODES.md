@@ -2,26 +2,45 @@
 
 The React website opens on **New drilling**, followed by **Maintenance**.
 
-## New drilling
+## New drilling: location evidence
 
-`POST /drilling/assess` accepts `planned_depth_ft` and `estimated_water_table_ft`.
-It compares depths, displays the margin and a graph, and provides an explanation
-with the same language options as maintenance. It does not use the maintenance
-models. Passing the check only means the planned depth extends below the estimated
-water table; it does not establish a productive aquifer or usable yield.
+`GET /drilling/sites` lists 26 reference stations in 20 Andhra Pradesh districts.
+The user selects district and mandal/reference station and specifies a water
+requirement in litres per hour. No guessed water-table input is required.
 
-`success_probability` is deliberately null. The repository has no verified
-drilling-success outcome labels. To enable success/failure prediction, define a
-usable-yield outcome and collect representative site records with observed drilling
-outcomes. Train and evaluate a separate model using only pre-drilling features;
-exclude pump age, measured borewell yield and other post-drilling information.
-Do not derive success labels from `Failure_Within_6Months`.
+`POST /drilling/site-assess` accepts `site_id` and `desired_yield_lph`.
+It returns recorded geology, static water level and station discharge; the graph
+compares recorded discharge with the user's requirement. These readings apply
+to the selected reference station, not to the proposed drilling plot.
+
+The catalogue is transcribed from the repository's `data/raw/geology.csv` APT
+section into `data/drilling_reference_sites.json`. Discharge converts from litres
+per second to litres per hour by multiplying by 3600. Static water level is metres
+below ground; the source header spells it `mgbl`. Dates are not supplied. The
+catalogue is not live monitoring, and its provenance/recency needs independent
+verification before operational use. Areas outside coverage cannot be assessed.
+
+`success_probability` remains null. There are no verified drilling-success labels
+in the repository. Define a usable-yield outcome and collect representative site
+records with observed drilling outcomes. Train and evaluate a separate model using
+only pre-drilling features. Do not use post-drilling pump telemetry or derive success
+labels from `Failure_Within_6Months`.
+
+The legacy `POST /drilling/assess` depth comparison remains for API compatibility.
 
 ## Maintenance
 
-`POST /predict` retains the existing 13-feature Random Forest/XGBoost model,
-six-month failure score, SHAP graphs and multilingual explanations. It is a
-research model trained on synthetic failure labels, not a field-validated forecast.
+`POST /predict` retains the 13-feature Random Forest/XGBoost model, six-month
+failure score, SHAP graphs and multilingual explanations. It is a research model
+trained on synthetic labels, not a field-validated forecast.
+English explanations are immediate and derived from the model output; only
+translations invoke Gemini. Changing modes clears the assistant conversation.
 
-Switching options keeps results separate and clears the assistant conversation
-so explanations do not carry over between tasks.
+## Connection recovery
+
+Health probes validate the JSON status, bypass caches and share in-flight work.
+The interface gives cold starts a three-minute recovery window and then continues
+retrying even if unavailable. Reconnect and return-to-tab events trigger checks.
+Assessments wait for API readiness before submitting; POST requests are not blindly
+retried. The free Render instance can still sleep after inactivity. An always-on
+hosting plan is needed to remove provider cold starts entirely.
