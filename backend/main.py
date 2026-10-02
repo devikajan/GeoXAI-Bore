@@ -9,6 +9,7 @@ from backend.gemini_assistant import AssistantError, chat_reply
 
 from backend.schemas import BorewellInput
 from backend.drilling import DrillingInput, assess_drilling
+from backend.site_assessment import SiteInput, SiteResult, assess_site, reference_sites
 
 
 ENV_PATH = Path(__file__).resolve().parents[1] / ".env"
@@ -75,7 +76,7 @@ class ChatRequest(BaseModel):
     messages: list[ChatMessage] = Field(min_length=1, max_length=20)
     language: Literal["auto", "en", "te", "hi", "ta", "kn", "ml", "mr", "bn", "gu", "pa", "ur", "or"] = "auto"
     simple_mode: bool = True
-    assessment: AssessmentContext | DrillingContext | None = None
+    assessment: AssessmentContext | DrillingContext | SiteResult | None = None
 
     @field_validator("messages")
     @classmethod
@@ -127,6 +128,19 @@ def predict(data: BorewellInput):
 @app.post("/drilling/assess")
 def drilling_assessment(data: DrillingInput):
     return assess_drilling(data)
+
+
+@app.get("/drilling/sites")
+def drilling_sites():
+    return reference_sites()
+
+
+@app.post("/drilling/site-assess")
+def drilling_site_assessment(data: SiteInput):
+    try:
+        return assess_site(data)
+    except LookupError as error:
+        raise HTTPException(status_code=404, detail=str(error)) from None
 
 
 @app.post("/explain")
