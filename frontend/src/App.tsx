@@ -1,11 +1,12 @@
 import { useEffect, useRef, useState } from 'react'
 import type { FormEvent, PointerEvent as ReactPointerEvent } from 'react'
 import { checkApiHealth, predictBorewell } from './api'
-import type { BorewellInput, PredictionResult } from './api'
+import type { BorewellInput, PredictionResult, DrillingResult } from './api'
 import './App.css'
 import AssistantChat from './AssistantChat'
 import ResultGraphs from './ResultGraphs'
 import ResultExplanation from './ResultExplanation'
+import DrillingAssessment from './DrillingAssessment'
 
 const initialForm: BorewellInput = {
   Borewell_Depth_ft: 450,
@@ -53,6 +54,8 @@ type NumberFieldProps = {
 }
 
 function App() {
+  const [mode, setMode] = useState<'drilling' | 'maintenance'>('drilling')
+  const [drillingResult, setDrillingResult] = useState<DrillingResult | null>(null)
   const [form, setForm] = useState<BorewellInput>(initialForm)
   const [result, setResult] = useState<PredictionResult | null>(null)
   const [error, setError] = useState('')
@@ -112,6 +115,7 @@ function App() {
   }
 
   const updateField = (field: keyof BorewellInput, value: string) => {
+    setResult(null)
     setForm((current) => ({
       ...current,
       [field]: typeof current[field] === 'number' ? Number(value) : value,
@@ -121,6 +125,7 @@ function App() {
   const submitPrediction = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
     setError('')
+    setResult(null)
     setIsLoading(true)
     try {
       setResult(await predictBorewell(form))
@@ -142,7 +147,7 @@ function App() {
       <header className="topbar">
         <a className="brand" href="#top" aria-label="GeoXAI-Bore home">
           <span className="brand-mark">GX</span>
-          <span><strong>GeoXAI-Bore</strong><small>Groundwater failure intelligence</small></span>
+          <span><strong>GeoXAI-Bore</strong><small>Drilling & maintenance assessment</small></span>
         </a>
         <nav aria-label="Primary navigation"><a className="active" href="#assessment">Assessment</a><a href="#method">Method</a></nav>
         <span className={`service-pill ${apiStatus}`} role="status"><i /> {apiStatus === 'ready' ? 'API ready' : apiStatus === 'offline' ? 'API unavailable' : 'API waking up'}</span>
@@ -150,17 +155,24 @@ function App() {
 
       <section className="hero" id="top" data-spotlight="dark">
         <span className="surface-glow" aria-hidden="true" />
-        <div className="hero-copy"><p className="eyebrow">Explainable groundwater intelligence</p><h1>Know the risk before the water stops.</h1><p className="hero-text">Combine field conditions, pump telemetry, and maintenance history to surface an explainable six-month failure risk for one borewell.</p><div className="hero-actions"><a className="hero-primary" href="#assessment">Run an assessment <span>→</span></a><a className="hero-secondary" href="#method">Explore the method</a></div><div className="hero-note"><span>13</span> signals evaluated by a Random Forest + XGBoost ensemble</div></div>
-        <div className="hero-diagram" aria-label="Borewell monitoring illustration"><div className="diagram-status"><span>Live model</span><strong>RF + XGB</strong></div><div className="rings"><span /><span /><span /></div><div className="well-line"><b>WELL</b><span>single-site risk profile</span></div><div className="water-line"><span>aquifer layer</span></div></div>
+        <div className="hero-copy"><p className="eyebrow">Explainable groundwater intelligence</p><h1>Plan the drilling. Care for the borewell.</h1><p className="hero-text">Check a proposed drilling depth, or assess the six-month failure risk of an existing borewell. Choose the assessment that fits your needs.</p><div className="hero-actions"><a className="hero-primary" href="#assessment">Run an assessment <span>→</span></a><a className="hero-secondary" href="#method">Explore the method</a></div><div className="hero-note"><span>02</span> assessment options for planning and maintenance</div></div>
+        <div className="hero-diagram" aria-label="Borewell monitoring illustration"><div className="diagram-status"><span>Plan &amp; maintain</span><strong>GeoXAI-Bore</strong></div><div className="rings"><span /><span /><span /></div><div className="well-line"><b>WELL</b><span>single-site risk profile</span></div><div className="water-line"><span>aquifer layer</span></div></div>
       </section>
 
-      <section className="proof-strip" aria-label="Model highlights" data-spotlight="light"><span className="surface-glow" aria-hidden="true" /><div><strong>13</strong><span>Field and equipment signals</span></div><div><strong>02</strong><span>Models in the ensemble</span></div><div><strong>05</strong><span>Top SHAP factors explained</span></div><div><strong>06 mo</strong><span>Prediction horizon</span></div></section>
+      <section className="proof-strip" aria-label="Model highlights" data-spotlight="light"><span className="surface-glow" aria-hidden="true" /><div><strong>02</strong><span>Assessment options</span></div><div><strong>13</strong><span>Maintenance model inputs</span></div><div><strong>05</strong><span>Maintenance factors explained</span></div><div><strong>06 mo</strong><span>Maintenance prediction horizon</span></div></section>
 
-      <section className="workspace" id="assessment">
+      <section className="assessment-options" id="assessment" aria-label="Assessment options">
+        <p className="eyebrow">Choose an assessment</p>
+        <div className="assessment-mode-buttons">
+          <button type="button" aria-pressed={mode === 'drilling'} onClick={() => setMode('drilling')}><span>01 / New drilling</span><strong>Before you drill</strong><small>Check the planned depth · success prediction awaiting data</small></button>
+          <button type="button" aria-pressed={mode === 'maintenance'} onClick={() => setMode('maintenance')}><span>02 / Maintenance</span><strong>Check an existing borewell</strong><small>Six-month failure risk and maintenance priorities</small></button>
+        </div>
+      </section>
+      {mode === 'drilling' ? <DrillingAssessment result={drillingResult} onResult={setDrillingResult} /> : <section className="workspace">
         <form className="assessment-form" onSubmit={submitPrediction} data-spotlight="light">
           <span className="surface-glow" aria-hidden="true" />
-          <div className="section-heading"><div><p className="eyebrow">Input profile</p><h2>Describe the borewell</h2></div><span className="required-note">All fields required</span></div>
-          <fieldset><legend>Site &amp; hydrology</legend><div className="field-grid">
+          <div className="section-heading"><div><p className="eyebrow">02 / Maintenance</p><h2>Describe the existing borewell</h2></div><span className="required-note">All fields required</span></div>
+          <fieldset disabled={isLoading}><legend>Site &amp; hydrology</legend><div className="field-grid">
             <NumberField label="Borewell depth" suffix="ft" value={form.Borewell_Depth_ft} min={50} max={1500} step={10} onChange={(value) => updateField('Borewell_Depth_ft', value)} />
             <NumberField label="Water table depth" suffix="ft" value={form.Water_Table_Depth_ft} min={10} max={1000} step={10} onChange={(value) => updateField('Water_Table_Depth_ft', value)} />
             <NumberField label="Water yield" suffix="LPH" value={form.Water_Yield_LPH} min={20} max={5000} step={10} onChange={(value) => updateField('Water_Yield_LPH', value)} />
@@ -168,7 +180,7 @@ function App() {
             <SelectField label="Region type" value={form.Region_Type} options={regionTypes} onChange={(value) => updateField('Region_Type', value)} />
             <NumberField label="Annual rainfall" suffix="mm" value={form.Annual_Rainfall_mm} min={100} max={4000} step={50} onChange={(value) => updateField('Annual_Rainfall_mm', value)} />
           </div></fieldset>
-          <fieldset><legend>Equipment &amp; usage</legend><div className="field-grid">
+          <fieldset disabled={isLoading}><legend>Equipment &amp; usage</legend><div className="field-grid">
             <NumberField label="Pump age" suffix="years" value={form.Pump_Age_years} min={0} max={30} step={0.5} onChange={(value) => updateField('Pump_Age_years', value)} />
             <NumberField label="Casing pipe age" suffix="years" value={form.Casing_Pipe_Age_years} min={0} max={40} step={0.5} onChange={(value) => updateField('Casing_Pipe_Age_years', value)} />
             <NumberField label="Daily usage" suffix="hours" value={form.Daily_Usage_hours} min={0.5} max={24} step={0.5} onChange={(value) => updateField('Daily_Usage_hours', value)} />
@@ -177,7 +189,8 @@ function App() {
             <NumberField label="Voltage fluctuation" suffix="%" value={form.Voltage_Fluctuation_pct} min={0} max={40} step={0.5} onChange={(value) => updateField('Voltage_Fluctuation_pct', value)} />
             <NumberField label="Maintenance visits" suffix="per year" value={form.Maintenance_Frequency_per_year} min={0} max={6} step={1} onChange={(value) => updateField('Maintenance_Frequency_per_year', value)} />
           </div></fieldset>
-          <div className="form-actions"><button className="primary-button" type="submit" disabled={isLoading}>{isLoading ? 'Assessing...' : 'Run assessment'} <span>→</span></button><button className="quiet-button" type="button" onClick={resetForm}>Reset fields</button></div>
+          <p className="assessment-description">Research estimate based on synthetic failure data. Use the result to support maintenance review.</p>
+          <div className="form-actions"><button className="primary-button" type="submit" disabled={isLoading}>{isLoading ? 'Assessing...' : 'Check maintenance risk'} <span>→</span></button><button className="quiet-button" type="button" disabled={isLoading} onClick={resetForm}>Reset fields</button></div>
           {error && <div className="error-banner" role="alert"><strong>Prediction unavailable.</strong> {error}<small>The hosted service may be waking up. Wait a moment and try again.</small></div>}
         </form>
 
@@ -185,11 +198,11 @@ function App() {
           <span className="surface-glow" aria-hidden="true" />
           {result ? <ResultView result={result} /> : <div className="empty-result"><span className="result-kicker">Live model output</span><div className="target-icon">◎</div><p className="eyebrow">Awaiting profile</p><h2>Your risk signal will appear here.</h2><p>Complete the profile and run an assessment to see the ensemble probability and the factors shaping it.</p><div className="empty-rule"><span /><small>Explainable prediction</small><span /></div></div>}
         </aside>
-      </section>
+      </section>}
 
-      <section className="method-strip" id="method"><p className="eyebrow">How it works</p><div data-spotlight="light"><span className="surface-glow" aria-hidden="true" /><strong>01 / Predict</strong><span>Ensemble probability from two tree-based models.</span></div><div data-spotlight="light"><span className="surface-glow" aria-hidden="true" /><strong>02 / Explain</strong><span>SHAP identifies the strongest risk drivers.</span></div><div data-spotlight="light"><span className="surface-glow" aria-hidden="true" /><strong>03 / Act</strong><span>Use the signal to prioritize field inspection.</span></div></section>
+      <section className="method-strip" id="method"><p className="eyebrow">How it works</p><div data-spotlight="light"><span className="surface-glow" aria-hidden="true" /><strong>01 / Predict</strong><span>Drilling: compare depths. Maintenance: estimate failure risk.</span></div><div data-spotlight="light"><span className="surface-glow" aria-hidden="true" /><strong>02 / Explain</strong><span>Read the drilling depth summary or the maintenance SHAP factors.</span></div><div data-spotlight="light"><span className="surface-glow" aria-hidden="true" /><strong>03 / Act</strong><span>Review the site before drilling or plan equipment inspection.</span></div></section>
       <footer><span>GeoXAI-Bore / research demonstrator</span><span>For planning support, not safety-critical decisions</span></footer>
-      <AssistantChat result={result} />
+      <AssistantChat key={mode} result={mode === 'drilling' ? drillingResult : result} />
     </main>
   )
 }

@@ -25,7 +25,7 @@ export default function ResultGraphs({ result }: { result: PredictionResult }) {
   return (
     <section className="result-graphs" aria-labelledby="risk-analysis-title">
       <div className="graph-heading">
-        <div><span>Six-month prediction</span><h3 id="risk-analysis-title">Risk analysis</h3></div>
+        <div><span>Existing borewell · Six-month prediction</span><h3 id="risk-analysis-title">Maintenance risk analysis</h3></div>
         <div className={`risk-score-badge ${categoryClass}`}><strong>{score.toFixed(1)}</strong><span>/ 100</span></div>
       </div>
       <p className="risk-explanation"><strong>{result.risk_category} risk.</strong> {riskExplanation}</p>

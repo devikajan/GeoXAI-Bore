@@ -47,7 +47,26 @@ export async function checkApiHealth(): Promise<boolean> {
 
 export type ChatMessage = { role: 'user' | 'assistant'; content: string }
 export type AssistantLanguage = 'auto' | 'en' | 'te' | 'hi' | 'ta' | 'kn' | 'ml' | 'mr' | 'bn' | 'gu' | 'pa' | 'ur' | 'or'
-export type AssistantAssessment = Pick<PredictionResult, 'risk_category' | 'ensemble_probability' | 'top_features'>
+export type DrillingInput = { planned_depth_ft: number; estimated_water_table_ft: number }
+export type DrillingResult = DrillingInput & {
+  assessment_type: 'drilling'
+  depth_margin_ft: number
+  depth_check: 'passes' | 'review_required'
+  success_probability: null
+  summary: string
+  next_step: string
+  limitation: string
+}
+export type AssistantAssessment = Pick<PredictionResult, 'risk_category' | 'ensemble_probability' | 'top_features'> | DrillingResult
+
+export async function assessDrilling(input: DrillingInput): Promise<DrillingResult> {
+  const response = await fetch(`${API_URL}/drilling/assess`, {
+    method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(input),
+    signal: AbortSignal.timeout(65000),
+  })
+  if (!response.ok) throw new Error('The drilling depth check could not be completed. Please review the inputs and try again.')
+  return response.json()
+}
 
 export async function sendChat(messages: ChatMessage[], language: AssistantLanguage, assessment?: AssistantAssessment): Promise<string> {
   const controller = new AbortController()
