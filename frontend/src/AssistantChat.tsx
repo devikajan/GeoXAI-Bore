@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import type { CSSProperties, FormEvent, PointerEvent as ReactPointerEvent } from 'react'
 import { sendChat } from './api'
-import type { AssistantLanguage, ChatMessage, AssistantAssessment } from './api'
+import type { AssistantLanguage, ChatMessage, AssistantAssessment, SiteResult } from './api'
 import assistantIcon from './assets/ai-assistant.svg'
 
 type Recognition = {
@@ -56,7 +56,7 @@ const copy = {
   },
 }
 
-export default function AssistantChat({ result }: { result: AssistantAssessment | null }) {
+export default function AssistantChat({ result }: { result: AssistantAssessment | SiteResult | null }) {
   const [open, setOpen] = useState(false)
   const [language, setLanguage] = useState<AssistantLanguage>('auto')
   const [messages, setMessages] = useState<ChatMessage[]>([])
@@ -221,7 +221,7 @@ export default function AssistantChat({ result }: { result: AssistantAssessment 
     {open && <section className="assistant-panel" aria-label={text.title}>
       <div className="assistant-header" onPointerDown={(event) => startDragging(event, 'header')} onPointerMove={moveAssistant} onPointerUp={stopDragging} onPointerCancel={stopDragging}><img src={assistantIcon} alt="" draggable={false} /><div><strong>{text.title}</strong><small>{text.move}</small></div><button className="assistant-position-reset" type="button" onClick={resetPosition} aria-label={text.resetPosition} title={text.resetPosition}>↺</button><button type="button" onClick={closeAssistant} aria-label={text.close}>×</button></div>
       <div className="assistant-tools"><label htmlFor="assistant-language">Answer language</label><select id="assistant-language" value={language} onChange={(event) => setLanguage(event.target.value as AssistantLanguage)}>{languageOptions.map((option) => <option key={option.code} value={option.code}>{option.label}</option>)}</select></div>
-      {result && <div className="assistant-result"><span>{language === 'te' ? 'తాజా ఫలితం జతచేయబడింది' : 'Latest result attached'}</span><strong>{'assessment_type' in result ? 'Drilling depth check · Success unconfirmed' : `${result.risk_category} maintenance risk · ${(result.ensemble_probability * 100).toFixed(1)}%`}</strong></div>}
+      {result && <div className="assistant-result"><span>{language === 'te' ? 'తాజా ఫలితం జతచేయబడింది' : 'Latest result attached'}</span><strong>{'assessment_type' in result ? 'Drilling site evidence · Success unconfirmed' : `${result.risk_category} maintenance risk · ${(result.ensemble_probability * 100).toFixed(1)}%`}</strong></div>}
       <div className="assistant-messages" role="log" aria-live="polite" aria-busy={busy}>
         {!messages.length && <div className="assistant-welcome"><h3>{text.hello}</h3><p>{text.intro}</p><p className="assistant-note">{text.privacy}</p>{text.prompts.map((question) => <button type="button" key={question} onClick={() => { setInput(question); inputRef.current?.focus() }}>{question}</button>)}</div>}
         {messages.map((message, index) => <div className={`assistant-message ${message.role}`} key={index}><small>{message.role === 'user' ? text.you : text.assistant}</small><p>{message.content}</p>{message.role === 'assistant' && <button className="read-answer" type="button" onClick={() => readAnswer(message.content)}>🔊 {text.read}</button>}</div>)}

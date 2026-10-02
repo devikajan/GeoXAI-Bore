@@ -1,12 +1,13 @@
-import { useEffect, useRef, useState } from 'react'
+import { useRef, useState } from 'react'
 import type { FormEvent, PointerEvent as ReactPointerEvent } from 'react'
-import { checkApiHealth, predictBorewell } from './api'
-import type { BorewellInput, PredictionResult, DrillingResult } from './api'
+import { predictBorewell } from './api'
+import type { BorewellInput, PredictionResult, SiteResult } from './api'
 import './App.css'
 import AssistantChat from './AssistantChat'
 import ResultGraphs from './ResultGraphs'
 import ResultExplanation from './ResultExplanation'
 import DrillingAssessment from './DrillingAssessment'
+import useApiStatus from './useApiStatus'
 
 const initialForm: BorewellInput = {
   Borewell_Depth_ft: 450,
@@ -55,46 +56,13 @@ type NumberFieldProps = {
 
 function App() {
   const [mode, setMode] = useState<'drilling' | 'maintenance'>('drilling')
-  const [drillingResult, setDrillingResult] = useState<DrillingResult | null>(null)
+  const [drillingResult, setDrillingResult] = useState<SiteResult | null>(null)
   const [form, setForm] = useState<BorewellInput>(initialForm)
   const [result, setResult] = useState<PredictionResult | null>(null)
   const [error, setError] = useState('')
   const [isLoading, setIsLoading] = useState(false)
-  const [apiStatus, setApiStatus] = useState<'checking' | 'ready' | 'offline'>('checking')
+  const { apiStatus, reconnect } = useApiStatus()
   const activeSpotlight = useRef<HTMLElement | null>(null)
-
-  useEffect(() => {
-    let active = true
-    let failures = 0
-    let generation = 0
-    let timer: number | undefined
-    async function updateApiStatus(currentGeneration: number) {
-      const available = await checkApiHealth()
-      if (!active || currentGeneration !== generation) return
-      if (available) {
-        failures = 0
-        setApiStatus('ready')
-      } else {
-        failures += 1
-        setApiStatus(failures >= 2 ? 'offline' : 'checking')
-      }
-      timer = window.setTimeout(() => updateApiStatus(currentGeneration), available ? 60000 : 5000)
-    }
-    void updateApiStatus(generation)
-    const checkOnFocus = () => {
-      generation += 1
-      failures = 0
-      setApiStatus('checking')
-      window.clearTimeout(timer)
-      void updateApiStatus(generation)
-    }
-    window.addEventListener('focus', checkOnFocus)
-    return () => {
-      active = false
-      window.clearTimeout(timer)
-      window.removeEventListener('focus', checkOnFocus)
-    }
-  }, [])
 
   function updateSurfaceSpotlight(event: ReactPointerEvent<HTMLElement>) {
     const surface = (event.target as Element).closest<HTMLElement>('[data-spotlight]')
@@ -150,12 +118,12 @@ function App() {
           <span><strong>GeoXAI-Bore</strong><small>Drilling & maintenance assessment</small></span>
         </a>
         <nav aria-label="Primary navigation"><a className="active" href="#assessment">Assessment</a><a href="#method">Method</a></nav>
-        <span className={`service-pill ${apiStatus}`} role="status"><i /> {apiStatus === 'ready' ? 'API ready' : apiStatus === 'offline' ? 'API unavailable' : 'API waking up'}</span>
+        <div className="connection-controls"><span className={`service-pill ${apiStatus}`} role="status"><i /> {apiStatus === 'ready' ? 'API ready' : apiStatus === 'offline' ? 'Connection unavailable' : 'Server starting…'}</span>{apiStatus !== 'ready' && <button type="button" className="reconnect-button" onClick={reconnect}>Reconnect</button>}</div>
       </header>
 
       <section className="hero" id="top" data-spotlight="dark">
         <span className="surface-glow" aria-hidden="true" />
-        <div className="hero-copy"><p className="eyebrow">Explainable groundwater intelligence</p><h1>Plan the drilling. Care for the borewell.</h1><p className="hero-text">Check a proposed drilling depth, or assess the six-month failure risk of an existing borewell. Choose the assessment that fits your needs.</p><div className="hero-actions"><a className="hero-primary" href="#assessment">Run an assessment <span>→</span></a><a className="hero-secondary" href="#method">Explore the method</a></div><div className="hero-note"><span>02</span> assessment options for planning and maintenance</div></div>
+        <div className="hero-copy"><p className="eyebrow">Explainable groundwater intelligence</p><h1>Plan the drilling. Care for the borewell.</h1><p className="hero-text">Explore groundwater evidence for a proposed location, or assess the six-month failure risk of an existing borewell. Choose the assessment that fits your needs.</p><div className="hero-actions"><a className="hero-primary" href="#assessment">Run an assessment <span>→</span></a><a className="hero-secondary" href="#method">Explore the method</a></div><div className="hero-note"><span>02</span> assessment options for planning and maintenance</div></div>
         <div className="hero-diagram" aria-label="Borewell monitoring illustration"><div className="diagram-status"><span>Plan &amp; maintain</span><strong>GeoXAI-Bore</strong></div><div className="rings"><span /><span /><span /></div><div className="well-line"><b>WELL</b><span>single-site risk profile</span></div><div className="water-line"><span>aquifer layer</span></div></div>
       </section>
 
@@ -164,7 +132,7 @@ function App() {
       <section className="assessment-options" id="assessment" aria-label="Assessment options">
         <p className="eyebrow">Choose an assessment</p>
         <div className="assessment-mode-buttons">
-          <button type="button" aria-pressed={mode === 'drilling'} onClick={() => setMode('drilling')}><span>01 / New drilling</span><strong>Before you drill</strong><small>Check the planned depth · success prediction awaiting data</small></button>
+          <button type="button" aria-pressed={mode === 'drilling'} onClick={() => setMode('drilling')}><span>01 / New drilling</span><strong>Before you drill</strong><small>Location, geology and recorded groundwater</small></button>
           <button type="button" aria-pressed={mode === 'maintenance'} onClick={() => setMode('maintenance')}><span>02 / Maintenance</span><strong>Check an existing borewell</strong><small>Six-month failure risk and maintenance priorities</small></button>
         </div>
       </section>
@@ -200,7 +168,7 @@ function App() {
         </aside>
       </section>}
 
-      <section className="method-strip" id="method"><p className="eyebrow">How it works</p><div data-spotlight="light"><span className="surface-glow" aria-hidden="true" /><strong>01 / Predict</strong><span>Drilling: compare depths. Maintenance: estimate failure risk.</span></div><div data-spotlight="light"><span className="surface-glow" aria-hidden="true" /><strong>02 / Explain</strong><span>Read the drilling depth summary or the maintenance SHAP factors.</span></div><div data-spotlight="light"><span className="surface-glow" aria-hidden="true" /><strong>03 / Act</strong><span>Review the site before drilling or plan equipment inspection.</span></div></section>
+      <section className="method-strip" id="method"><p className="eyebrow">How it works</p><div data-spotlight="light"><span className="surface-glow" aria-hidden="true" /><strong>01 / Predict</strong><span>Drilling: select a reference location. Maintenance: estimate failure risk.</span></div><div data-spotlight="light"><span className="surface-glow" aria-hidden="true" /><strong>02 / Explain</strong><span>Review local groundwater evidence or maintenance SHAP factors.</span></div><div data-spotlight="light"><span className="surface-glow" aria-hidden="true" /><strong>03 / Act</strong><span>Review the site before drilling or plan equipment inspection.</span></div></section>
       <footer><span>GeoXAI-Bore / research demonstrator</span><span>For planning support, not safety-critical decisions</span></footer>
       <AssistantChat key={mode} result={mode === 'drilling' ? drillingResult : result} />
     </main>

@@ -1,5 +1,12 @@
 :root { --ink: #17231f; --muted: #718078; --line: #d9ded7; --paper: #f4f3ee; --panel: #fbfbf7; --green: #2d6655; --red: #b95549; }
 .assessment-options { margin-top: 46px; scroll-margin-top: 24px; }
+.connection-controls { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.reconnect-button { border: 1px solid #a8c5b9; border-radius: 8px; padding: 7px 10px; color: var(--green); background: var(--panel); cursor: pointer; font: inherit; font-size: 13px; }
+.site-facts { display: grid; gap: 16px; margin: 22px 0; }
+.site-facts div { padding: 16px; border-radius: 12px; background: #eaf3ed; }
+.site-facts span, .site-facts strong, .site-facts small { display: block; line-height: 1.7; }
+.site-facts span, .site-facts small, .reference-source { font-size: 14px; }
+.site-facts strong { font-size: 18px; }
 .assessment-mode-buttons { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
 .assessment-mode-buttons button { padding: 24px; border: 1px solid #a8c5b9; border-radius: 18px; background: var(--panel); color: var(--ink); text-align: left; cursor: pointer; font: inherit; }
 .assessment-mode-buttons button[aria-pressed="true"] { background: #174d41; color: #fff; box-shadow: 0 10px 24px #174d411c; }

@@ -32,17 +32,41 @@ const API_URL = import.meta.env.PROD
   ? '/api'
   : (import.meta.env.VITE_API_URL ?? 'http://127.0.0.1:8000')
 
-export async function checkApiHealth(): Promise<boolean> {
+let healthRequest: Promise<boolean> | null = null
+let lastHealthyAt = 0
+
+export function checkApiHealth(): Promise<boolean> {
+  if (healthRequest) return healthRequest
+  healthRequest = probeApiHealth().finally(() => { healthRequest = null })
+  return healthRequest
+}
+
+async function probeApiHealth(): Promise<boolean> {
   const controller = new AbortController()
-  const timeout = window.setTimeout(() => controller.abort(), 65000)
+  const timeout = window.setTimeout(() => controller.abort(), 12000)
   try {
-    const response = await fetch(`${API_URL}/health`, { signal: controller.signal })
-    return response.ok
+    const response = await fetch(`${API_URL}/health`, { signal: controller.signal, cache: 'no-store' })
+    const data: unknown = response.ok ? await response.json() : null
+    const healthy = Boolean(data && typeof data === 'object' && 'status' in data && data.status === 'healthy')
+    if (healthy) lastHealthyAt = Date.now()
+    else lastHealthyAt = 0
+    return healthy
   } catch {
+    lastHealthyAt = 0
     return false
   } finally {
     window.clearTimeout(timeout)
   }
+}
+
+async function waitForApi() {
+  if (Date.now() - lastHealthyAt < 20000) return
+  const deadline = Date.now() + 90000
+  do {
+    if (await checkApiHealth()) return
+    await new Promise(resolve => window.setTimeout(resolve, 3000))
+  } while (Date.now() < deadline)
+  throw new Error('The server has not finished starting. Use Reconnect at the top of the page and try again when it says API ready.')
 }
 
 export type ChatMessage = { role: 'user' | 'assistant'; content: string }
@@ -59,7 +83,36 @@ export type DrillingResult = DrillingInput & {
 }
 export type AssistantAssessment = Pick<PredictionResult, 'risk_category' | 'ensemble_probability' | 'top_features'> | DrillingResult
 
+export type ReferenceSite = {
+  id: string; station: string; district: string; mandal: string; geology: string
+  water_level_m: number; discharge_lps: number; source: string; measurement_date: string | null
+}
+export type SiteResult = {
+  assessment_type: 'drilling_site'; site: ReferenceSite; desired_yield_lph: number
+  reference_yield_lph: number; reference_water_depth_ft: number
+  evidence_status: 'reference_meets_target' | 'reference_below_target'
+  success_probability: null; summary: string; next_step: string; limitation: string
+}
+
+export async function getDrillingSites(): Promise<ReferenceSite[]> {
+  await waitForApi()
+  const response = await fetch(`${API_URL}/drilling/sites`, { signal: AbortSignal.timeout(20000) })
+  if (!response.ok) throw new Error('Location data is unavailable. Please reconnect and retry.')
+  return response.json()
+}
+
+export async function assessSite(siteId: string, desiredYield: number): Promise<SiteResult> {
+  await waitForApi()
+  const response = await fetch(`${API_URL}/drilling/site-assess`, {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ site_id: siteId, desired_yield_lph: desiredYield }), signal: AbortSignal.timeout(20000),
+  })
+  if (!response.ok) throw new Error('The location assessment is unavailable. Choose a listed station and try again.')
+  return response.json()
+}
+
 export async function assessDrilling(input: DrillingInput): Promise<DrillingResult> {
+  await waitForApi()
   const response = await fetch(`${API_URL}/drilling/assess`, {
     method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(input),
     signal: AbortSignal.timeout(65000),
@@ -68,7 +121,8 @@ export async function assessDrilling(input: DrillingInput): Promise<DrillingResu
   return response.json()
 }
 
-export async function sendChat(messages: ChatMessage[], language: AssistantLanguage, assessment?: AssistantAssessment): Promise<string> {
+export async function sendChat(messages: ChatMessage[], language: AssistantLanguage, assessment?: AssistantAssessment | SiteResult): Promise<string> {
+  await waitForApi()
   const controller = new AbortController()
   const timeout = window.setTimeout(() => controller.abort(), 65000)
   try {
@@ -87,21 +141,23 @@ export async function sendChat(messages: ChatMessage[], language: AssistantLangu
     return data.reply
   } catch (error) {
     if (error instanceof DOMException && error.name === 'AbortError') throw new Error('The assistant took too long. Please try again.')
-    if (error instanceof TypeError) throw new Error('Cannot reach the assistant. Start the backend on port 8000.')
+    if (error instanceof TypeError) throw new Error('Cannot reach the assistant. Use Reconnect and try again when the API is ready.')
     throw error
   } finally { window.clearTimeout(timeout) }
 }
 
 export async function predictBorewell(input: BorewellInput): Promise<PredictionResult> {
+  await waitForApi()
   let response: Response
   try {
     response = await fetch(`${API_URL}/predict`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(input),
+      signal: AbortSignal.timeout(65000),
     })
   } catch {
-    throw new Error(`Cannot reach the prediction API at ${API_URL}. Start the backend and try again.`)
+    throw new Error('The prediction service did not respond. Reconnect and try again when the API is ready.')
   }
 
   if (!response.ok) {

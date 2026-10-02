@@ -12,11 +12,12 @@ export default function ResultExplanation({ result }: { result: PredictionResult
   const resultKey = `${result.ensemble_probability}:${result.risk_category}:${result.top_features.map((feature) => `${feature.feature}:${feature.shap_value}`).join('|')}`
   const requestKey = `${resultKey}:${language}:${retry}`
   const settled = response?.key === requestKey
-  const loading = !settled
+  const loading = language !== 'en' && !settled
   const explanation = settled ? response.text : language === 'en' ? localExplanation(result) : ''
   const error = settled ? response.error : ''
 
   useEffect(() => {
+    if (language === 'en') return
     let current = true
     const prompt = [
       'Explain the attached borewell assessment in simple words for a non-technical reader.',
@@ -31,10 +32,8 @@ export default function ResultExplanation({ result }: { result: PredictionResult
         if (!current) return
         setResponse({
           key: requestKey,
-          text: language === 'en' ? localExplanation(result) : '',
-          error: language === 'en'
-            ? 'The AI explanation is temporarily unavailable. The summary below is based directly on the model result.'
-            : 'This translation is temporarily unavailable. Please retry or choose English.',
+          text: '',
+          error: 'This translation is temporarily unavailable. Please retry or choose English.',
         })
       })
 
