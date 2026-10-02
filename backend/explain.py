@@ -1,6 +1,7 @@
 import shap
 import pandas as pd
 from functools import lru_cache
+from threading import Lock
 
 from backend.model import (
     random_forest,
@@ -8,9 +9,18 @@ from backend.model import (
 )
 
 
+_explainer_lock = Lock()
+
+
 @lru_cache(maxsize=1)
-def get_explainer():
+def _build_explainer():
     return shap.TreeExplainer(random_forest)
+
+
+def get_explainer():
+    # Startup and the first request may arrive together; construct only once.
+    with _explainer_lock:
+        return _build_explainer()
 
 
 def explain_borewell(data):
