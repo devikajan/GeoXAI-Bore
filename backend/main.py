@@ -8,6 +8,7 @@ from typing import Literal
 from backend.gemini_assistant import AssistantError, chat_reply
 
 from backend.schemas import BorewellInput
+from backend.drilling import DrillingInput, assess_drilling
 
 
 ENV_PATH = Path(__file__).resolve().parents[1] / ".env"
@@ -58,11 +59,23 @@ class AssessmentContext(BaseModel):
     top_features: list[RiskDriver] = Field(default_factory=list, max_length=5)
 
 
+class DrillingContext(BaseModel):
+    assessment_type: Literal["drilling"]
+    planned_depth_ft: float = Field(gt=0, le=1500)
+    estimated_water_table_ft: float = Field(gt=0, le=1000)
+    depth_margin_ft: float
+    depth_check: Literal["passes", "review_required"]
+    success_probability: None = None
+    summary: str = Field(max_length=1000)
+    next_step: str = Field(max_length=1000)
+    limitation: str = Field(max_length=1000)
+
+
 class ChatRequest(BaseModel):
     messages: list[ChatMessage] = Field(min_length=1, max_length=20)
     language: Literal["auto", "en", "te", "hi", "ta", "kn", "ml", "mr", "bn", "gu", "pa", "ur", "or"] = "auto"
     simple_mode: bool = True
-    assessment: AssessmentContext | None = None
+    assessment: AssessmentContext | DrillingContext | None = None
 
     @field_validator("messages")
     @classmethod
@@ -109,6 +122,11 @@ def predict(data: BorewellInput):
     )
 
     return result
+
+
+@app.post("/drilling/assess")
+def drilling_assessment(data: DrillingInput):
+    return assess_drilling(data)
 
 
 @app.post("/explain")
