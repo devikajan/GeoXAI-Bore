@@ -1,5 +1,9 @@
 # GeoXAI-Bore
 
+The website has two assessment options: **New drilling** (a preliminary depth check;
+drilling success prediction awaits outcome data) and **Maintenance** (the existing
+six-month failure-risk model). See [assessment modes](docs/ASSESSMENT_MODES.md).
+
 Gemini chatbot setup: see [AI assistant instructions](docs/AI_ASSISTANT.md).
 
 Dataset verification against the research paper: see [dataset alignment](docs/DATASET_ALIGNMENT.md).
