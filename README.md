@@ -151,6 +151,17 @@ The project uses publicly available government datasets, including:
 
 ---
 
+
+Gemini chatbot setup: see [AI assistant instructions](docs/AI_ASSISTANT.md).
+
+Dataset verification against the research paper: see [dataset alignment](docs/DATASET_ALIGNMENT.md).
+
+Production hosting: see the [React and FastAPI deployment guide](docs/DEPLOYMENT.md).
+
+
+---
+
+
 ## Repository Structure
 
 ```
@@ -175,23 +186,6 @@ GeoXAI-Bore/
 ├── requirements.txt
 └── LICENSE
 ```
-
----
-
-## Current Status
-
-- [x] Repository setup
-- [x] Project architecture
-- [x] Literature review
-- [x] Dataset collection
-- [x] Data preprocessing
-- [x] Feature engineering
-- [x] Model development
-- [x] SHAP explainability
-- [ ] GenAI integration
-- [x] Dashboard development
-- [x] Research paper
-- [ ] Deployment
 
 ---
 
